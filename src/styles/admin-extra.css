@@ -1,0 +1,214 @@
+/* Additions for: command groups, response panel, probe, grouped charger config, current limit card. */
+
+/* ---- command picker, grouped ---- */
+.command-picker.grouped {
+  display: grid;
+  gap: 12px;
+}
+.cmd-group-title {
+  color: var(--muted-2);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.cmd-group-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.field-wide {
+  grid-column: 1 / -1;
+}
+.field textarea.mono-input {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+/* ---- response panel ---- */
+.response-banner.warning {
+  color: #f9d18a;
+  background: rgba(244, 189, 90, 0.08);
+}
+.response-banner.neutral {
+  color: #c3cfde;
+  background: rgba(148, 163, 184, 0.08);
+}
+.response-banner strong {
+  font-size: 12px;
+}
+.result-section {
+  padding: 14px 16px 4px;
+}
+.result-section h4 {
+  margin: 0 0 8px;
+  font-size: 11px;
+  color: #c3cfde;
+  letter-spacing: 0.02em;
+}
+.result-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.result-section-head h4 {
+  margin: 0;
+}
+.result-empty {
+  padding: 8px 0 12px;
+  font-size: 11px;
+}
+.response-json.inline {
+  margin: 0 0 8px;
+}
+.frame-list {
+  display: grid;
+  gap: 8px;
+  padding-bottom: 12px;
+}
+.frame-row {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.012);
+}
+.frame-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  margin-bottom: 6px;
+}
+.frame-meta .muted {
+  margin-left: auto;
+  font-size: 9px;
+}
+.detail-list {
+  margin: 6px 0 0;
+  padding-left: 16px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.6;
+}
+.command-result.command-error {
+  margin: 14px 16px 0;
+}
+
+/* ---- probe ---- */
+details > summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-size: 10px;
+}
+details[open] > summary {
+  margin-bottom: 6px;
+}
+
+/* ---- grouped charger configuration ---- */
+.config-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--line);
+  padding-right: 16px;
+  flex-wrap: wrap;
+}
+.config-toolbar .config-summary {
+  border-bottom: 0;
+}
+.config-group {
+  padding: 14px 16px 2px;
+}
+.config-group-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.config-group-head h3 {
+  margin: 0;
+  font-size: 12px;
+}
+.config-group-head span {
+  color: var(--muted-2);
+  font-size: 10px;
+}
+.unsupported {
+  padding: 12px 16px 16px;
+}
+.chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.chip-list code {
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* ---- active current limit ---- */
+.current-card {
+  margin: 14px 16px 4px;
+  border: 1px solid rgba(76, 201, 176, 0.2);
+  background: rgba(76, 201, 176, 0.04);
+  border-radius: 11px;
+}
+.current-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  flex-wrap: wrap;
+}
+.current-card-head h3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 12px;
+}
+.current-card-head p {
+  margin: 5px 0 0;
+  max-width: 560px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+.current-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0;
+  border-top: 1px solid var(--line);
+}
+.current-item {
+  display: grid;
+  gap: 6px;
+  padding: 12px 16px;
+  border-right: 1px solid var(--line);
+}
+.current-item:last-child {
+  border-right: 0;
+}
+.current-item > span {
+  color: var(--muted-2);
+  font-size: 10px;
+}
+.current-item strong {
+  font-size: 15px;
+}
+.current-item strong.muted {
+  font-size: 11px;
+  font-weight: 600;
+}
