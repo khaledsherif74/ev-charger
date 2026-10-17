@@ -1261,7 +1261,7 @@ details > summary {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 16px;
+  padding: 4px;
   border-radius: 12px;
 }
 .live.on {
