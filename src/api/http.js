@@ -40,12 +40,14 @@ function friendly(path, status, code, fallback) {
   return fallback;
 }
 
+const API_BASE = import.meta.env.VITE_BACKEND_URL || "";
+
 export async function request(path, options = {}) {
   const { method = "GET", body, signal } = options;
 
   let response;
   try {
-    response = await fetch(path, {
+    response = await fetch(`${API_BASE}${path}`, {
       method,
       credentials: "include",
       signal,

@@ -20,7 +20,7 @@ export default function useAdminRealtime() {
       import.meta.env.VITE_BACKEND_URL || "https://ev-charger.runasp.net";
     const socket = io(backendUrl, {
       withCredentials: true,
-      transports: ["websocket", "polling"],
+      transports: ["polling"],
     });
 
     socket.on("connect", () => {

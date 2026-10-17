@@ -14,9 +14,8 @@ export default function useUserRealtime() {
       import.meta.env.VITE_BACKEND_URL || "https://ev-charger.runasp.net";
     const socket = io(backendUrl, {
       withCredentials: true,
-      transports: ["websocket", "polling"],
+      transports: ["polling"],
     });
-
     socket.on("session:update", (session) =>
       dispatch(applySessionUpdate(session)),
     );
