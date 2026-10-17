@@ -1,16 +1,35 @@
-// The error catalog: ONE entry per problem, in English and Arabic.
-// Entry = { code, source, severity, actions[], en:{...}, ar:{...} }; use entryFor(code, lang) to read it flat:
-// { code, source, severity, title, meaning, causes[], steps[], actions[], callTechnicianWhen, customerImpact }.
-// Action ids are defined in catalogActions.js (the dashboard buttons).
+export const SOURCES = [
+  "charger",
+  "connection",
+  "session",
+  "payment",
+  "config",
+  "system",
+];
 
-export const SOURCES = ["charger", "connection", "session", "payment", "config", "system"];
+const mk = ([
+  title,
+  meaning,
+  causes,
+  steps,
+  callTechnicianWhen,
+  customerImpact,
+]) => ({ title, meaning, causes, steps, callTechnicianWhen, customerImpact });
+const E = (code, source, severity, actions, en, ar) => ({
+  code,
+  source,
+  severity,
+  actions,
+  en: mk(en),
+  ar: mk(ar),
+});
 
-const mk = ([title, meaning, causes, steps, callTechnicianWhen, customerImpact]) => ({ title, meaning, causes, steps, callTechnicianWhen, customerImpact });
-const E = (code, source, severity, actions, en, ar) => ({ code, source, severity, actions, en: mk(en), ar: mk(ar) });
+const TECH_EN =
+  "The problem is still there after you followed the steps, or it comes back again and again.";
+const TECH_AR =
+  "المشكلة مازالت موجودة بعد تنفيذ الخطوات، أو تتكرر مرة بعد مرة.";
 
-const TECH_EN = "The problem is still there after you followed the steps, or it comes back again and again.";
-const TECH_AR = "المشكلة مازالت موجودة بعد تنفيذ الخطوات، أو تتكرر مرة بعد مرة.";
-
+// prettier-ignore
 export const CATALOG = [
   // ───────────── Charger error codes (OCPP ChargePointErrorCode) ─────────────
   E("ConnectorLockFailure", "charger", "warning", ["unlock", "restart"],
@@ -644,21 +663,32 @@ export const CATALOG = [
 ];
 
 const BY_CODE = new Map(CATALOG.map((e) => [e.code, e]));
-const ALIAS = { OccurrenceConstraintViolation: "OccurenceConstraintViolation", CALLERROR_OccurrenceConstraintViolation: "CALLERROR_OccurenceConstraintViolation" };
+const ALIAS = {
+  OccurrenceConstraintViolation: "OccurenceConstraintViolation",
+  CALLERROR_OccurrenceConstraintViolation:
+    "CALLERROR_OccurenceConstraintViolation",
+};
 
 export const hasEntry = (code) => BY_CODE.has(ALIAS[code] || code);
 
-/** Flat entry in one language. Unknown codes fall back to a generic entry (STOP_* -> STOP_Other, ANSWER_* -> Rejected). */
 export function entryFor(code, lang = "en") {
   let e = BY_CODE.get(ALIAS[code] || code);
   if (!e && typeof code === "string") {
     if (code.startsWith("STOP_")) e = BY_CODE.get("STOP_Other");
     else if (code.startsWith("ANSWER_")) e = BY_CODE.get("ANSWER_Rejected");
-    else if (code.startsWith("CALLERROR_")) e = BY_CODE.get("CALLERROR_GenericError");
+    else if (code.startsWith("CALLERROR_"))
+      e = BY_CODE.get("CALLERROR_GenericError");
   }
   e = e || BY_CODE.get("UNKNOWN");
   const text = e[lang] || e.en;
-  return { code: e.code, requestedCode: code, source: e.source, severity: e.severity, actions: e.actions, ...text };
+  return {
+    code: e.code,
+    requestedCode: code,
+    source: e.source,
+    severity: e.severity,
+    actions: e.actions,
+    ...text,
+  };
 }
 
 export function listEntries(lang = "en") {

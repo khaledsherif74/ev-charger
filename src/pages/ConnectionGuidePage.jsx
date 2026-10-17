@@ -9,7 +9,16 @@ import CopyButton from "../components/common/CopyButton";
 import ChargerSelect from "../components/common/ChargerSelect";
 import CatalogEntryView from "../components/common/CatalogEntryView";
 
-const TROUBLE = ["Offline", "WrongPassword", "WsRedirect307", "PortForced80", "WrongClock", "NoInternet", "Flapping", "NoHeartbeat"];
+const TROUBLE = [
+  "Offline",
+  "WrongPassword",
+  "WsRedirect307",
+  "PortForced80",
+  "WrongClock",
+  "NoInternet",
+  "Flapping",
+  "NoHeartbeat",
+];
 
 function Value({ label, value, note }) {
   return (
@@ -26,7 +35,7 @@ function Value({ label, value, note }) {
 
 export default function ConnectionGuidePage() {
   const { t, lang } = useI18n();
-  const { overview, chargers } = useOverview(5000); // fast refresh: the owner watches the indicator while rebooting
+  const { overview, chargers } = useOverview(5000);
   const [chargerId, setChargerId] = useState("");
   const [open, setOpen] = useState(null);
   const charger = chargers.find((c) => c.id === chargerId);
@@ -47,13 +56,32 @@ export default function ConnectionGuidePage() {
       <PageHeader title={t("guide.title")} description={t("guide.sub")} />
       <SectionCard title={t("guide.live")}>
         <div className="pad live-box">
-          <ChargerSelect chargers={chargers} value={chargerId} onChange={setChargerId} />
+          <ChargerSelect
+            chargers={chargers}
+            value={chargerId}
+            onChange={setChargerId}
+          />
           {charger ? (
-            <div className={`live ${charger.online ? "on" : "off"}`} role="status">
-              {charger.online ? <CircleCheck size={28} /> : <CircleX size={28} />}
+            <div
+              className={`live ${charger.online ? "on" : "off"}`}
+              role="status"
+            >
+              {charger.online ? (
+                <CircleCheck size={28} />
+              ) : (
+                <CircleX size={28} />
+              )}
               <div>
-                <strong>{charger.online ? t("guide.connected") : t("guide.notConnected")}</strong>
-                <p>{charger.online ? t("guide.connectedHelp") : t("guide.notConnectedHelp")}</p>
+                <strong>
+                  {charger.online
+                    ? t("guide.connected")
+                    : t("guide.notConnected")}
+                </strong>
+                <p>
+                  {charger.online
+                    ? t("guide.connectedHelp")
+                    : t("guide.notConnectedHelp")}
+                </p>
               </div>
             </div>
           ) : null}
@@ -62,12 +90,26 @@ export default function ConnectionGuidePage() {
 
       <div style={{ height: 16 }} />
       <SectionCard title={t("guide.values")} subtitle={t("guide.valuesHelp")}>
-        {!secure ? <div className="note note-warn">{t("guide.insecure")}</div> : null}
+        {!secure ? (
+          <div className="note note-warn">{t("guide.insecure")}</div>
+        ) : null}
         <div className="guide-list">
-          <Value label={t("guide.url")} value={url || t("guide.unknownHost")} note={t("guide.urlHelp")} />
-          <Value label={t("guide.port")} value="443" note={t("guide.portHelp")} />
+          <Value
+            label={t("guide.url")}
+            value={url || t("guide.unknownHost")}
+            note={t("guide.urlHelp")}
+          />
+          <Value
+            label={t("guide.port")}
+            value="443"
+            note={t("guide.portHelp")}
+          />
           <Value label={t("guide.protocol")} value="OCPP 1.6J" />
-          <Value label={t("guide.id")} value={chargerId || "—"} note={t("guide.idHelp")} />
+          <Value
+            label={t("guide.id")}
+            value={chargerId || "—"}
+            note={t("guide.idHelp")}
+          />
           <div className="guide-row">
             <div>
               <strong>{t("guide.password")}</strong>
@@ -88,11 +130,21 @@ export default function ConnectionGuidePage() {
           {TROUBLE.map((code) => {
             const e = entryFor(code, lang);
             return (
-              <div key={code} className={`help-item ${open === code ? "open" : ""}`}>
-                <button type="button" className="help-item-head" aria-expanded={open === code} onClick={() => setOpen(open === code ? null : code)}>
+              <div
+                key={code}
+                className={`help-item ${open === code ? "open" : ""}`}
+              >
+                <button
+                  type="button"
+                  className="help-item-head"
+                  aria-expanded={open === code}
+                  onClick={() => setOpen(open === code ? null : code)}
+                >
                   <span className="help-item-title">{e.title}</span>
                 </button>
-                {open === code ? <CatalogEntryView entry={e} ctx={{ chargerId }} /> : null}
+                {open === code ? (
+                  <CatalogEntryView entry={e} ctx={{ chargerId }} />
+                ) : null}
               </div>
             );
           })}

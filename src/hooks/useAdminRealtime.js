@@ -3,7 +3,11 @@ import { io } from "socket.io-client";
 import { useDispatch, useSelector } from "react-redux";
 import { applyChargerStatus } from "../features/admin/adminSlice";
 import { alertsPushed, fetchAlerts } from "../features/alerts/alertsSlice";
-import { socketConnected, socketDisconnected, statusEventReceived } from "../features/realtime/realtimeSlice";
+import {
+  socketConnected,
+  socketDisconnected,
+  statusEventReceived,
+} from "../features/realtime/realtimeSlice";
 
 export default function useAdminRealtime() {
   const dispatch = useDispatch();
@@ -12,11 +16,16 @@ export default function useAdminRealtime() {
   useEffect(() => {
     if (!authenticated) return undefined;
 
-    const socket = io({ withCredentials: true, transports: ["websocket", "polling"] });
+    const backendUrl =
+      import.meta.env.VITE_BACKEND_URL || "https://ev-charger.runasp.net";
+    const socket = io(backendUrl, {
+      withCredentials: true,
+      transports: ["websocket", "polling"],
+    });
 
     socket.on("connect", () => {
       dispatch(socketConnected());
-      dispatch(fetchAlerts()); // catch up on anything missed while disconnected
+      dispatch(fetchAlerts());
     });
     socket.on("disconnect", () => dispatch(socketDisconnected()));
     socket.on("connect_error", () => dispatch(socketDisconnected()));
@@ -26,7 +35,6 @@ export default function useAdminRealtime() {
         dispatch(statusEventReceived());
       }
     });
-    // Alerts arrive only for admin sockets (the server joins them to the "admins" room).
     socket.on("alerts:update", (payload) => dispatch(alertsPushed(payload)));
 
     return () => {

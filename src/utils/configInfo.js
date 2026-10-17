@@ -1,6 +1,6 @@
-// Plain names, explanations, recommended values and OK / Check judgement for OCPP configuration keys. Bilingual.
 const L = (en, ar) => ({ en, ar });
 
+// prettier-ignore
 export const GROUPS = [
   { id: "current", title: L("Current & power limits", "حدود التيار والقدرة") },
   { id: "metering", title: L("Energy meter readings", "قراءات عداد الطاقة") },
@@ -13,7 +13,7 @@ export const GROUPS = [
 ];
 
 const n = (v) => Number(v);
-// key: [group, name, what it does, unit?, recommended?, judge(value)=>true if OK, catalogCode if not OK]
+// prettier-ignore
 const K = {
   ChargingScheduleAllowedChargingRateUnit: ["current", L("Limit unit allowed", "وحدة الحد المسموحة"), L("Whether limits may be set in amps, watts or both.", "هل يمكن ضبط الحدود بالأمبير أو الواط أو كليهما.")],
   ChargeProfileMaxStackLevel: ["current", L("Highest limit priority", "أعلى أولوية للحد"), L("The highest priority number a power limit can have.", "أعلى رقم أولوية يمكن أن يكون لحد القدرة.")],
@@ -65,12 +65,31 @@ const CURRENT_LIKE = /(current|amp|power|phase|limit|rating|voltage)/i;
 
 export function describeKey(key) {
   const k = K[key];
-  if (k) return { group: k[0], name: k[1], what: k[2], unit: k[3] || "", recommended: k[4] ?? null, judge: k[5] || null, code: k[6] || null };
+  if (k)
+    return {
+      group: k[0],
+      name: k[1],
+      what: k[2],
+      unit: k[3] || "",
+      recommended: k[4] ?? null,
+      judge: k[5] || null,
+      code: k[6] || null,
+    };
   const group = CURRENT_LIKE.test(key) ? "current" : "other";
-  return { group, name: L(key, key), what: L("A setting specific to this charger model.", "إعداد خاص بموديل هذا الشاحن."), unit: "", recommended: null, judge: null, code: null };
+  return {
+    group,
+    name: L(key, key),
+    what: L(
+      "A setting specific to this charger model.",
+      "إعداد خاص بموديل هذا الشاحن.",
+    ),
+    unit: "",
+    recommended: null,
+    judge: null,
+    code: null,
+  };
 }
 
-/** "ok" | "check" for a key and its current value. Keys without a recommendation are always "ok". */
 export function judgeKey(key, value) {
   const d = describeKey(key);
   if (!d.judge || value === null || value === undefined) return "ok";
@@ -86,13 +105,23 @@ export function groupConfig(entries, query = "", tx = (o) => o.en) {
   const buckets = new Map(GROUPS.map((g) => [g.id, []]));
   for (const entry of entries || []) {
     const d = describeKey(entry.key);
-    if (q && !`${entry.key} ${tx(d.name)} ${entry.value ?? ""}`.toLowerCase().includes(q)) continue;
-    buckets.get(d.group).push({ ...entry, info: d, status: judgeKey(entry.key, entry.value) });
+    if (
+      q &&
+      !`${entry.key} ${tx(d.name)} ${entry.value ?? ""}`
+        .toLowerCase()
+        .includes(q)
+    )
+      continue;
+    buckets
+      .get(d.group)
+      .push({ ...entry, info: d, status: judgeKey(entry.key, entry.value) });
   }
-  return GROUPS.map((g) => ({ ...g, entries: buckets.get(g.id) })).filter((g) => g.entries.length);
+  return GROUPS.map((g) => ({ ...g, entries: buckets.get(g.id) })).filter(
+    (g) => g.entries.length,
+  );
 }
 
-// Settings the owner may change from the Actions page (standard writable OCPP 1.6 keys + ABB FreevendEnabled).
+// prettier-ignore
 export const WRITABLE_KEYS = [
   "FreevendEnabled", "AuthorizeRemoteTxRequests", "MeterValueSampleInterval", "MeterValuesSampledData", "HeartbeatInterval",
   "ConnectionTimeOut", "WebSocketPingInterval", "MinimumStatusDuration", "ClockAlignedDataInterval", "MeterValuesAlignedData",
@@ -101,19 +130,27 @@ export const WRITABLE_KEYS = [
   "AllowOfflineTxForUnknownId", "MaxEnergyOnInvalidId", "ResetRetries", "TransactionMessageAttempts", "TransactionMessageRetryInterval",
   "LightIntensity", "BlinkRepeat", "ConnectorPhaseRotation",
 ];
+// prettier-ignore
 export const BOOL_KEYS = new Set([
   "FreevendEnabled", "AuthorizeRemoteTxRequests", "StopTransactionOnEVSideDisconnect", "UnlockConnectorOnEVSideDisconnect",
   "StopTransactionOnInvalidId", "AuthorizationCacheEnabled", "LocalAuthorizeOffline", "LocalPreAuthorize", "LocalAuthListEnabled",
   "AllowOfflineTxForUnknownId",
 ]);
 
-/** Dropdown groups: [{ id, title, keys:[{key, name, what, recommended, unit}] }] in menu order. */
 export function writableGroups() {
   return GROUPS.map((g) => ({
     ...g,
-    keys: WRITABLE_KEYS.filter((k) => describeKey(k).group === g.id).map((k) => {
-      const d = describeKey(k);
-      return { key: k, name: d.name, what: d.what, recommended: d.recommended, unit: d.unit };
-    }),
+    keys: WRITABLE_KEYS.filter((k) => describeKey(k).group === g.id).map(
+      (k) => {
+        const d = describeKey(k);
+        return {
+          key: k,
+          name: d.name,
+          what: d.what,
+          recommended: d.recommended,
+          unit: d.unit,
+        };
+      },
+    ),
   })).filter((g) => g.keys.length);
 }

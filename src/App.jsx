@@ -47,13 +47,11 @@ export default function App() {
 
       <Route element={<AdminRoute />}>
         <Route element={<AdminLayout />}>
-          {/* Daily */}
           <Route path="/admin" element={<HomePage />} />
           <Route path="/admin/chargers" element={<ChargersPage />} />
           <Route path="/admin/sessions" element={<SessionsPage />} />
           <Route path="/admin/customers" element={<CustomersPage />} />
           <Route path="/admin/payments" element={<PaymentsPage />} />
-          {/* Fix & Control */}
           <Route path="/admin/alerts" element={<AlertsPage />} />
           <Route path="/admin/help" element={<HelpCenterPage />} />
           <Route path="/admin/actions" element={<ActionsPage />} />
@@ -63,14 +61,12 @@ export default function App() {
             element={<ChargerSettingsPage />}
           />
           <Route path="/admin/check" element={<CheckPage />} />
-          {/* Setup */}
           <Route path="/admin/add-charger" element={<AddChargerPage />} />
           <Route
             path="/admin/connection-guide"
             element={<ConnectionGuidePage />}
           />
           <Route path="/admin/settings" element={<SettingsPage />} />
-          {/* old addresses keep working */}
           <Route
             path="/admin/advanced"
             element={<Navigate to="/admin/charger-settings" replace />}

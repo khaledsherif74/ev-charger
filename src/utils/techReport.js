@@ -1,5 +1,3 @@
-// Builds the short text the owner pastes into WhatsApp or email for the technician. Pure.
-// report = response of GET /api/admin/chargers/:id/report; t = dictionary function; fmt = date formatter.
 export function buildTechReport(report, t, fmt = (d) => String(d)) {
   const c = report.charger;
   const dash = (v) => (v === null || v === undefined || v === "" ? "-" : v);
@@ -14,12 +12,23 @@ export function buildTechReport(report, t, fmt = (d) => String(d)) {
     `${t("rep.errorCode")}: ${dash(c.errorCode)}`,
     `${t("rep.vendorCode")}: ${dash(c.vendorErrorCode)}${c.errorInfo ? ` (${c.errorInfo})` : ""}`,
   ];
-  if (report.activeSession) lines.push(`${t("rep.session")}: #${report.activeSession.id} ${report.activeSession.state}`);
+  if (report.activeSession)
+    lines.push(
+      `${t("rep.session")}: #${report.activeSession.id} ${report.activeSession.state}`,
+    );
   lines.push("", t("rep.events"));
-  if (report.events.length) for (const e of report.events) lines.push(`- ${fmt(e.at)} ${e.kind}${e.code ? ` ${e.code}` : ""}${e.detail ? ` ${String(e.detail).slice(0, 120)}` : ""}`);
+  if (report.events.length)
+    for (const e of report.events)
+      lines.push(
+        `- ${fmt(e.at)} ${e.kind}${e.code ? ` ${e.code}` : ""}${e.detail ? ` ${String(e.detail).slice(0, 120)}` : ""}`,
+      );
   else lines.push("-");
   lines.push("", t("rep.lastCommand"));
   const cmd = report.lastCommand;
-  lines.push(cmd ? `${fmt(cmd.at)} ${cmd.command}${cmd.params ? ` ${cmd.params}` : ""} -> ${dash(cmd.answer)}` : "-");
+  lines.push(
+    cmd
+      ? `${fmt(cmd.at)} ${cmd.command}${cmd.params ? ` ${cmd.params}` : ""} -> ${dash(cmd.answer)}`
+      : "-",
+  );
   return lines.join("\n");
 }

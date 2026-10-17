@@ -7,7 +7,7 @@ import { I18nProvider } from "./i18n";
 import App from "./App";
 import "./styles/globals.css";
 import "./styles/admin-extra.css";
-import "./styles/light-theme.css"; // must stay last: overrides the dark values
+import "./styles/light-theme.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

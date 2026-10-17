@@ -8,7 +8,6 @@ import ErrorState from "../components/common/ErrorState";
 import Spinner from "../components/common/Spinner";
 import { HelpLink } from "../components/common/HelpPanel";
 
-// Read-only on purpose: these values live in the server settings and are changed by the technician.
 export default function SettingsPage() {
   const { t } = useI18n();
   const { overview, status, error, reload } = useOverview(0);
@@ -57,15 +56,23 @@ export default function SettingsPage() {
               <strong>{t("set.paymob")}</strong>
               <p>{t("set.paymobHelp")}</p>
             </div>
-            <Badge tone={c.paymobConfigured ? "success" : "danger"}>{c.paymobConfigured ? t("set.configured") : t("set.notConfigured")}</Badge>
-            {!c.paymobConfigured ? <HelpLink code="PAYMOB_KEYS_MISSING" /> : null}
+            <Badge tone={c.paymobConfigured ? "success" : "danger"}>
+              {c.paymobConfigured
+                ? t("set.configured")
+                : t("set.notConfigured")}
+            </Badge>
+            {!c.paymobConfigured ? (
+              <HelpLink code="PAYMOB_KEYS_MISSING" />
+            ) : null}
           </div>
           <div className="guide-row">
             <div>
               <strong>{t("set.admin")}</strong>
               <p>{t("set.adminHelp")}</p>
             </div>
-            <Badge tone={c.adminConfigured ? "success" : "danger"}>{c.adminConfigured ? t("set.configured") : t("set.notConfigured")}</Badge>
+            <Badge tone={c.adminConfigured ? "success" : "danger"}>
+              {c.adminConfigured ? t("set.configured") : t("set.notConfigured")}
+            </Badge>
           </div>
           <div className="guide-row">
             <div>

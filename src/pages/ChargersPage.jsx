@@ -6,7 +6,12 @@ import { fetchOverview } from "../features/admin/adminSlice";
 import { fetchAlerts } from "../features/alerts/alertsSlice";
 import { useI18n } from "../i18n";
 import { explainResult } from "../utils/answers";
-import { errorCatalogCode, errorText, plainStatus, statusCatalogCode } from "../utils/plain";
+import {
+  errorCatalogCode,
+  errorText,
+  plainStatus,
+  statusCatalogCode,
+} from "../utils/plain";
 import { timeAgo } from "../utils/time";
 import useOverview from "../hooks/useOverview";
 import Badge from "../components/common/Badge";
@@ -26,8 +31,8 @@ function ChargerCard({ charger }) {
   const dispatch = useDispatch();
   const { confirm, dialog } = useConfirm();
   const [amps, setAmps] = useState(16);
-  const [touched, setTouched] = useState(false); // owner moved the slider: do not overwrite it
-  const [limit, setLimit] = useState({ state: "idle", amps: null }); // what the charger really applies
+  const [touched, setTouched] = useState(false);
+  const [limit, setLimit] = useState({ state: "idle", amps: null });
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState(null);
   const st = plainStatus(charger, t);
@@ -37,17 +42,24 @@ function ChargerCard({ charger }) {
   const hasError = charger.errorCode && charger.errorCode !== "NoError";
   const locked = !charger.online || busy;
 
-  // Ask the charger which current limit it applies now, so the slider starts at the truth (not at a made-up 16 A).
   const readLimit = useCallback(async () => {
     setLimit((l) => ({ ...l, state: "loading" }));
     try {
-      const r = await adminApi.command(charger.id, "GetCompositeSchedule", { connectorId: 1, duration: 3600, chargingRateUnit: "A" });
-      const periods = r.response?.chargingSchedule?.chargingSchedulePeriod || [];
+      const r = await adminApi.command(charger.id, "GetCompositeSchedule", {
+        connectorId: 1,
+        duration: 3600,
+        chargingRateUnit: "A",
+      });
+      const periods =
+        r.response?.chargingSchedule?.chargingSchedulePeriod || [];
       if (r.ok && r.response?.status === "Accepted" && periods.length) {
         const a = Math.min(...periods.map((p) => p.limit));
         setLimit({ state: "set", amps: a });
-        setAmps((cur) => (touchedRef.current ? cur : Math.min(32, Math.max(6, Math.round(a)))));
-      } else if (r.ok && r.response?.status === "Rejected") setLimit({ state: "none", amps: null });
+        setAmps((cur) =>
+          touchedRef.current ? cur : Math.min(32, Math.max(6, Math.round(a))),
+        );
+      } else if (r.ok && r.response?.status === "Rejected")
+        setLimit({ state: "none", amps: null });
       else setLimit({ state: "unknown", amps: null });
     } catch {
       setLimit({ state: "unknown", amps: null });
@@ -57,27 +69,37 @@ function ChargerCard({ charger }) {
   touchedRef.current = touched;
   useEffect(() => {
     if (charger.online) readLimit();
-    // read when the charger comes online; the button and Apply read again
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [charger.id, charger.online]);
 
   async function applyLimit() {
-    const ok = await confirm({ title: t("act.power"), body: t("act.powerConfirm", { id: charger.id, amps }), chargerEffect: t("fx.setLimit", { amps }), moneyEffect: t("money.none"), confirmLabel: t("act.apply") });
+    const ok = await confirm({
+      title: t("act.power"),
+      body: t("act.powerConfirm", { id: charger.id, amps }),
+      chargerEffect: t("fx.setLimit", { amps }),
+      moneyEffect: t("money.none"),
+      confirmLabel: t("act.apply"),
+    });
     if (!ok) return;
     setBusy(true);
     setNote(null);
     try {
-      const r = await adminApi.command(charger.id, "SetCurrentLimit", { limitAmps: amps });
+      const r = await adminApi.command(charger.id, "SetCurrentLimit", {
+        limitAmps: amps,
+      });
       const ex = explainResult(r);
       setNote({ tone: ex.tone, text: t(ex.textKey), code: ex.code, ms: r.ms });
     } catch (e) {
-      setNote({ tone: "bad", text: errorText(e, t), code: errorCatalogCode(e) });
+      setNote({
+        tone: "bad",
+        text: errorText(e, t),
+        code: errorCatalogCode(e),
+      });
     } finally {
       setBusy(false);
       dispatch(fetchOverview());
       dispatch(fetchAlerts());
       setTouched(false);
-      setTimeout(readLimit, 1500); // show what the charger really accepted
+      setTimeout(readLimit, 1500);
     }
   }
 
@@ -89,7 +111,9 @@ function ChargerCard({ charger }) {
         </div>
         <div>
           <strong dir="ltr">{charger.id}</strong>
-          <span>{t("ch.contact", { when: timeAgo(charger.lastHeartbeat, t) })}</span>
+          <span>
+            {t("ch.contact", { when: timeAgo(charger.lastHeartbeat, t) })}
+          </span>
         </div>
         <Badge tone={st.tone} dot>
           {st.label}
@@ -103,15 +127,25 @@ function ChargerCard({ charger }) {
           <strong>{t("ch.error")}</strong>
           <div dir="ltr">
             {charger.errorCode}
-            {charger.vendorErrorCode ? ` · ${t("alerts.vendor")}: ${charger.vendorErrorCode}` : ""}
+            {charger.vendorErrorCode
+              ? ` · ${t("alerts.vendor")}: ${charger.vendorErrorCode}`
+              : ""}
             {charger.errorInfo ? ` · ${charger.errorInfo}` : ""}
           </div>
         </div>
       ) : null}
-      <div className="charger-session">{session ? t("ch.session", { n: session.id }) : t("ch.noSession")}</div>
+      <div className="charger-session">
+        {session ? t("ch.session", { n: session.id }) : t("ch.noSession")}
+      </div>
 
       <div className="charger-actions">
-        {session ? <ActionButton id="stopSession" ctx={ctx} className="button button-danger" /> : null}
+        {session ? (
+          <ActionButton
+            id="stopSession"
+            ctx={ctx}
+            className="button button-danger"
+          />
+        ) : null}
         <ActionButton id="restart" ctx={ctx} />
         <ActionButton id={disabled ? "enable" : "disable"} ctx={ctx} />
         <ReportButton chargerId={charger.id} />
@@ -123,16 +157,41 @@ function ChargerCard({ charger }) {
           <span className="power-value">{amps} A</span>
         </div>
         <div className={`limit-now limit-${limit.state}`}>
-          {limit.state === "set" ? t("ch.limitNow", { a: limit.amps }) : limit.state === "none" ? t("ch.limitNone") : limit.state === "loading" ? t("common.loading") : limit.state === "unknown" ? t("ch.limitUnknown") : ""}
+          {limit.state === "set"
+            ? t("ch.limitNow", { a: limit.amps })
+            : limit.state === "none"
+              ? t("ch.limitNone")
+              : limit.state === "loading"
+                ? t("common.loading")
+                : limit.state === "unknown"
+                  ? t("ch.limitUnknown")
+                  : ""}
           {charger.online && limit.state !== "loading" ? (
             <button type="button" className="help-link" onClick={readLimit}>
               {t("common.refresh")}
             </button>
           ) : null}
         </div>
-        <input type="range" min="6" max="32" step="1" value={amps} onChange={(e) => { setTouched(true); setAmps(Number(e.target.value)); }} disabled={locked} aria-label={t("act.power")} />
+        <input
+          type="range"
+          min="6"
+          max="32"
+          step="1"
+          value={amps}
+          onChange={(e) => {
+            setTouched(true);
+            setAmps(Number(e.target.value));
+          }}
+          disabled={locked}
+          aria-label={t("act.power")}
+        />
         <p>{t("act.powerHelp")}</p>
-        <button type="button" className="button button-secondary" disabled={locked} onClick={applyLimit}>
+        <button
+          type="button"
+          className="button button-secondary"
+          disabled={locked}
+          onClick={applyLimit}
+        >
           {t("act.apply")}
         </button>
       </div>
@@ -153,7 +212,8 @@ export default function ChargersPage() {
         <Spinner />
       </div>
     );
-  if (!overview && error) return <ErrorState message={error} onRetry={reload} />;
+  if (!overview && error)
+    return <ErrorState message={error} onRetry={reload} />;
 
   return (
     <>

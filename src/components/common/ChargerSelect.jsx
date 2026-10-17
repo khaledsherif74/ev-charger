@@ -1,11 +1,17 @@
 import { useEffect } from "react";
 import { useI18n } from "../../i18n";
 
-/** Picks one charger. Selects the first one when nothing is chosen yet. */
-export default function ChargerSelect({ chargers, value, onChange, allowAll = false, label }) {
+export default function ChargerSelect({
+  chargers,
+  value,
+  onChange,
+  allowAll = false,
+  label,
+}) {
   const { t } = useI18n();
   useEffect(() => {
-    if (!allowAll && !value && chargers.length) onChange((chargers.find((c) => c.online) || chargers[0]).id);
+    if (!allowAll && !value && chargers.length)
+      onChange((chargers.find((c) => c.online) || chargers[0]).id);
   }, [allowAll, value, chargers, onChange]);
   return (
     <label className="field charger-select">

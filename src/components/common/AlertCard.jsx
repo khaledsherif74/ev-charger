@@ -7,7 +7,6 @@ import CatalogActions from "./CatalogActions";
 import { SEV_TONE } from "./CatalogEntryView";
 import { useHelp } from "./HelpPanel";
 
-/** One alert: severity colour, plain title, one-line meaning, "How to fix" (full steps) and the catalog buttons. */
 export default function AlertCard({ alert, compact = false }) {
   const { t, lang } = useI18n();
   const { open } = useHelp();
@@ -22,24 +21,37 @@ export default function AlertCard({ alert, compact = false }) {
   return (
     <article className={`alert-card sev-${alert.severity}`}>
       <div className="alert-top">
-        <Badge tone={SEV_TONE[alert.severity]}>{t(`sev.${alert.severity}`)}</Badge>
+        <Badge tone={SEV_TONE[alert.severity]}>
+          {t(`sev.${alert.severity}`)}
+        </Badge>
         {where.map((w) => (
           <span key={w} className="alert-where">
             {w}
           </span>
         ))}
-        {alert.since ? <span className="alert-since">{t("alerts.since", { when: timeAgo(alert.since, t) })}</span> : null}
+        {alert.since ? (
+          <span className="alert-since">
+            {t("alerts.since", { when: timeAgo(alert.since, t) })}
+          </span>
+        ) : null}
       </div>
       <h3>{entry.title}</h3>
       <p className="alert-meaning">{entry.meaning}</p>
       {p.vendorErrorCode || p.info ? (
         <p className="alert-vendor" dir="ltr">
-          {t("alerts.vendor")}: {p.vendorErrorCode || "-"} {p.info ? `· ${p.info}` : ""}
+          {t("alerts.vendor")}: {p.vendorErrorCode || "-"}{" "}
+          {p.info ? `· ${p.info}` : ""}
         </p>
       ) : null}
-      {p.amountPiastres ? <p className="alert-vendor">{formatMoneyPiastres(p.amountPiastres)}</p> : null}
+      {p.amountPiastres ? (
+        <p className="alert-vendor">{formatMoneyPiastres(p.amountPiastres)}</p>
+      ) : null}
       <div className="alert-actions">
-        <button type="button" className="button button-primary" onClick={() => open(alert.code, ctx)}>
+        <button
+          type="button"
+          className="button button-primary"
+          onClick={() => open(alert.code, ctx)}
+        >
           {t("alerts.howToFix")}
         </button>
         {!compact ? <CatalogActions entry={entry} ctx={ctx} /> : null}

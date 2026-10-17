@@ -66,7 +66,7 @@ export const sendAdminCommand = createAsyncThunk(
     try {
       return await adminApi.command(chargerId, command, params);
     } catch (error) {
-      return rejectWithValue(fail(error)); // keeps code + Zod details so the UI can show them
+      return rejectWithValue(fail(error));
     }
   },
 );
@@ -88,9 +88,9 @@ const initialState = {
   configErrorByCharger: {},
   command: {
     status: "idle",
-    lastRequest: null, // { chargerId, command, params, at }
+    lastRequest: null,
     lastResult: null,
-    error: null, // { message, status, code, details }
+    error: null,
     finishedAt: null,
   },
 };
@@ -122,7 +122,6 @@ const slice = createSlice({
   },
   extraReducers(builder) {
     builder
-      // Never keep admin data in memory after sign-out / expiry.
       .addCase(logoutAdmin.fulfilled, () => initialState)
       .addCase(adminSessionExpired, () => initialState)
       .addCase(fetchOverview.pending, (state) => {

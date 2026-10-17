@@ -1,4 +1,3 @@
-/** "5 minutes ago" in the dictionary language. */
 export function timeAgo(value, t, now = Date.now()) {
   if (!value) return "—";
   const ms = now - new Date(value).getTime();
@@ -14,7 +13,10 @@ export function timeAgo(value, t, now = Date.now()) {
 export function durationText(startedAt, endedAt, t) {
   if (!startedAt) return "—";
   const end = endedAt ? new Date(endedAt).getTime() : Date.now();
-  const min = Math.max(0, Math.round((end - new Date(startedAt).getTime()) / 60000));
+  const min = Math.max(
+    0,
+    Math.round((end - new Date(startedAt).getTime()) / 60000),
+  );
   if (min < 60) return t("time.minShort", { n: min });
   return t("time.hm", { h: Math.floor(min / 60), m: min % 60 });
 }

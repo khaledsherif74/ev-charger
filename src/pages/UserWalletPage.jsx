@@ -28,7 +28,6 @@ export default function UserWalletPage() {
     const result = await dispatch(createTopup(value));
     if (createTopup.fulfilled.match(result) && result.payload?.checkoutUrl) {
       setCheckoutUrl(result.payload.checkoutUrl);
-      // FIX: window.open after an await is blocked as a popup by most browsers. Go to the checkout in this tab.
       window.location.assign(result.payload.checkoutUrl);
     }
   }

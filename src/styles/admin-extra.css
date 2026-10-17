@@ -1,6 +1,3 @@
-/* Additions for: command groups, response panel, probe, grouped charger config, current limit card. */
-
-/* ---- command picker, grouped ---- */
 .command-picker.grouped {
   display: grid;
   gap: 12px;
@@ -29,7 +26,6 @@
   resize: vertical;
 }
 
-/* ---- response panel ---- */
 .response-banner.warning {
   color: #f9d18a;
   background: rgba(244, 189, 90, 0.08);
@@ -100,7 +96,6 @@
   margin: 14px 16px 0;
 }
 
-/* ---- probe ---- */
 details > summary {
   cursor: pointer;
   color: var(--accent);
@@ -110,7 +105,6 @@ details[open] > summary {
   margin-bottom: 6px;
 }
 
-/* ---- grouped charger configuration ---- */
 .config-toolbar {
   display: flex;
   align-items: center;
@@ -157,7 +151,6 @@ details[open] > summary {
   background: rgba(255, 255, 255, 0.02);
 }
 
-/* ---- active current limit ---- */
 .current-card {
   margin: 14px 16px 4px;
   border: 1px solid rgba(76, 201, 176, 0.2);

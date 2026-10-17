@@ -44,7 +44,6 @@ const slice = createSlice({
     clearAdminAuthError(state) {
       state.error = null;
     },
-    // dispatched when any admin API call answers 401 (cookie expired)
     adminSessionExpired(state) {
       state.admin = null;
       state.initialized = true;

@@ -1,8 +1,18 @@
 import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { ArrowRight, Globe, LockKeyhole, RadioTower, ShieldCheck } from "lucide-react";
+import {
+  ArrowRight,
+  Globe,
+  LockKeyhole,
+  RadioTower,
+  ShieldCheck,
+} from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { bootstrapAdmin, clearAdminAuthError, loginAdmin } from "../features/adminAuth/adminAuthSlice";
+import {
+  bootstrapAdmin,
+  clearAdminAuthError,
+  loginAdmin,
+} from "../features/adminAuth/adminAuthSlice";
 import { useI18n } from "../i18n";
 import { errorText } from "../utils/plain";
 import Spinner from "../components/common/Spinner";
@@ -11,10 +21,11 @@ export default function AdminLoginPage() {
   const dispatch = useDispatch();
   const location = useLocation();
   const { t, toggle } = useI18n();
-  const { admin, status, error, initialized } = useSelector((state) => state.adminAuth);
+  const { admin, status, error, initialized } = useSelector(
+    (state) => state.adminAuth,
+  );
   const [form, setForm] = useState({ username: "", password: "" });
 
-  // Already signed in as admin? bootstrap finds the cookie and we redirect below.
   useEffect(() => {
     if (!initialized) dispatch(bootstrapAdmin());
   }, [dispatch, initialized]);
@@ -29,8 +40,13 @@ export default function AdminLoginPage() {
   }
 
   const busy = status === "loading";
-  // the server message is English; known cases are shown in the chosen language
-  const shown = !error ? "" : /not configured/i.test(error) ? errorText({ code: "ADMIN_NOT_CONFIGURED" }, t) : /invalid/i.test(error) ? t("login.invalid") : error;
+  const shown = !error
+    ? ""
+    : /not configured/i.test(error)
+      ? errorText({ code: "ADMIN_NOT_CONFIGURED" }, t)
+      : /invalid/i.test(error)
+        ? t("login.invalid")
+        : error;
   return (
     <div className="auth-page">
       <div className="auth-visual">
@@ -66,14 +82,37 @@ export default function AdminLoginPage() {
           <form className="auth-form" onSubmit={submit}>
             <label className="field">
               <span>{t("login.username")}</span>
-              <input type="text" dir="ltr" autoComplete="username" value={form.username} onChange={(e) => setForm((c) => ({ ...c, username: e.target.value }))} placeholder="admin" required autoFocus />
+              <input
+                type="text"
+                dir="ltr"
+                autoComplete="username"
+                value={form.username}
+                onChange={(e) =>
+                  setForm((c) => ({ ...c, username: e.target.value }))
+                }
+                placeholder="admin"
+                required
+                autoFocus
+              />
             </label>
             <label className="field">
               <span>{t("login.password")}</span>
-              <input type="password" dir="ltr" autoComplete="current-password" value={form.password} onChange={(e) => setForm((c) => ({ ...c, password: e.target.value }))} required />
+              <input
+                type="password"
+                dir="ltr"
+                autoComplete="current-password"
+                value={form.password}
+                onChange={(e) =>
+                  setForm((c) => ({ ...c, password: e.target.value }))
+                }
+                required
+              />
             </label>
             {shown ? <div className="form-error">{shown}</div> : null}
-            <button className="button button-primary button-wide" disabled={busy || !form.username || !form.password}>
+            <button
+              className="button button-primary button-wide"
+              disabled={busy || !form.username || !form.password}
+            >
               {busy ? (
                 <Spinner label={t("login.signingIn")} />
               ) : (

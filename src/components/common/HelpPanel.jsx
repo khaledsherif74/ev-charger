@@ -1,16 +1,22 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { CircleHelp, X } from "lucide-react";
 import { useI18n } from "../../i18n";
 import { entryFor } from "../../utils/errorCatalog";
 import CatalogEntryView from "./CatalogEntryView";
 
-// A side panel with the catalog entry for one exact code. Any badge or note can open it with <HelpLink code=... />.
 const Ctx = createContext({ open: () => {} });
 export const useHelp = () => useContext(Ctx);
 
 export function HelpProvider({ children }) {
   const { t, lang } = useI18n();
-  const [state, setState] = useState(null); // { code, ctx }
+  const [state, setState] = useState(null);
   const open = useCallback((code, ctx = {}) => setState({ code, ctx }), []);
   const close = useCallback(() => setState(null), []);
   const value = useMemo(() => ({ open }), [open]);
@@ -29,10 +35,20 @@ export function HelpProvider({ children }) {
       {state ? (
         <>
           <div className="help-backdrop" onClick={close} />
-          <aside className="help-panel" role="dialog" aria-modal="true" aria-label={t("help.what")}>
+          <aside
+            className="help-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-label={t("help.what")}
+          >
             <header className="help-panel-head">
               <strong>{t("help.what")}</strong>
-              <button type="button" className="icon-button" onClick={close} aria-label={t("dlg.cancel")}>
+              <button
+                type="button"
+                className="icon-button"
+                onClick={close}
+                aria-label={t("dlg.cancel")}
+              >
                 <X size={18} />
               </button>
             </header>

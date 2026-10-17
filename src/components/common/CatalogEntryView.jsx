@@ -4,15 +4,20 @@ import Badge from "./Badge";
 import CatalogActions from "./CatalogActions";
 import ReportButton from "./ReportButton";
 
-export const SEV_TONE = { critical: "danger", warning: "warning", info: "neutral" };
+export const SEV_TONE = {
+  critical: "danger",
+  warning: "warning",
+  info: "neutral",
+};
 
-/** The full plain-language page for one catalog entry: meaning, causes, numbered steps, buttons, when to call. */
 export default function CatalogEntryView({ entry, ctx = {}, extra }) {
   const { t } = useI18n();
   return (
     <div className="entry">
       <div className="entry-head">
-        <Badge tone={SEV_TONE[entry.severity]}>{t(`sev.${entry.severity}`)}</Badge>
+        <Badge tone={SEV_TONE[entry.severity]}>
+          {t(`sev.${entry.severity}`)}
+        </Badge>
         <Badge tone="neutral">{t(`src.${entry.source}`)}</Badge>
       </div>
       <h3 className="entry-title">{entry.title}</h3>

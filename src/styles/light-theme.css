@@ -1,4 +1,3 @@
-/* Light theme. Imported AFTER globals.css and admin-extra.css, so it overrides the dark values. */
 :root {
   color-scheme: light;
   color: #1f2937;
@@ -28,7 +27,6 @@ body {
   line-height: 1.5;
 }
 
-/* surfaces */
 .sidebar,
 .user-sidebar {
   background: #fff;
@@ -91,7 +89,6 @@ body {
   background: #f8fafc;
 }
 
-/* text sizes: nothing below 13px, big readable text for non-technical users */
 .nav-item {
   font-size: 15px;
   min-height: 44px;
@@ -214,7 +211,6 @@ details > summary {
   display: list-item;
 }
 
-/* buttons */
 .button-primary {
   color: #fff;
   background: var(--primary);
@@ -237,7 +233,6 @@ details > summary {
   box-shadow: none;
 }
 
-/* badges, metrics */
 .badge-success {
   color: #166534;
   background: #e6f6ec;
@@ -305,7 +300,6 @@ details > summary {
   color: var(--text);
 }
 
-/* code-like areas (technical details) */
 .log-payload,
 .response-json {
   background: #f6f8fb;
@@ -327,7 +321,6 @@ details > summary {
   background: #f8fafc;
 }
 
-/* messages */
 .error-state {
   background: #fdecef;
   border-color: #f6c1cb;
@@ -370,7 +363,6 @@ details > summary {
   border-top-color: var(--primary);
 }
 
-/* login pages */
 .auth-page,
 .auth-panel {
   background: #f6f8fb;
@@ -411,7 +403,6 @@ details > summary {
   margin-bottom: 18px;
 }
 
-/* customer pages */
 .user-balance strong {
   color: #065f46;
 }
@@ -431,7 +422,6 @@ details > summary {
   background: #f6f9ff;
 }
 
-/* ───────────── admin components ───────────── */
 .lang-btn {
   display: inline-flex;
   align-items: center;
@@ -576,7 +566,6 @@ details > summary {
   transform: rotate(180deg);
 }
 
-/* notes and result lines */
 .note {
   margin-top: 12px;
   padding: 10px 12px;
@@ -657,7 +646,6 @@ details > summary {
   margin: 14px 0;
 }
 
-/* modal (replaces window.confirm) */
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -724,7 +712,6 @@ details > summary {
   padding: 16px 20px 20px;
 }
 
-/* help side panel: opens on the reading-end side */
 .help-backdrop {
   position: fixed;
   inset: 0;
@@ -759,7 +746,6 @@ details > summary {
   overflow-y: auto;
 }
 
-/* catalog entry */
 .entry-head {
   display: flex;
   gap: 8px;
@@ -813,7 +799,6 @@ details > summary {
   margin-bottom: 4px;
 }
 
-/* alerts */
 .alert-list {
   display: grid;
   gap: 14px;
@@ -921,7 +906,6 @@ details > summary {
   flex-wrap: wrap;
 }
 
-/* help center */
 .help-group h2 {
   font-size: 18px;
   margin: 22px 0 10px;
@@ -965,7 +949,6 @@ details > summary {
   padding: 4px 18px 18px;
 }
 
-/* chargers */
 .charger-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
@@ -1041,7 +1024,6 @@ details > summary {
   line-height: 1.5;
 }
 
-/* action cards */
 .cmd-list {
   display: grid;
   gap: 10px;
@@ -1115,7 +1097,6 @@ details > summary {
   margin-top: 10px;
 }
 
-/* timeline */
 .timeline {
   list-style: none;
   margin: 0;
@@ -1170,7 +1151,6 @@ details > summary {
   font-size: 13px;
 }
 
-/* check my charger */
 .check-list {
   list-style: none;
   margin: 0;
@@ -1206,7 +1186,6 @@ details > summary {
   flex: 0 0 auto;
 }
 
-/* setup pages */
 .add-form {
   display: grid;
   gap: 10px;
@@ -1305,7 +1284,6 @@ details > summary {
   margin-top: 8px;
 }
 
-/* Arabic / right-to-left */
 [dir="rtl"] body {
   font-family: "Segoe UI", Tahoma, Inter, system-ui, sans-serif;
 }
@@ -1431,7 +1409,6 @@ details > summary {
   }
 }
 
-/* charger card + its main settings side by side */
 .charger-cards {
   grid-template-columns: 1fr;
 }
@@ -1524,7 +1501,6 @@ details > summary {
   }
 }
 
-/* settings tables: fit the screen, never scroll sideways */
 .table-fit {
   overflow: visible;
 }

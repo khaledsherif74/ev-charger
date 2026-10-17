@@ -1,8 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-/** Small loader for read-only admin data. fn() returns a promise. interval (ms) refreshes silently. */
-export default function useFetch(fn, deps = [], { interval = 0, enabled = true } = {}) {
-  const [state, setState] = useState({ data: null, error: null, loading: enabled });
+export default function useFetch(
+  fn,
+  deps = [],
+  { interval = 0, enabled = true } = {},
+) {
+  const [state, setState] = useState({
+    data: null,
+    error: null,
+    loading: enabled,
+  });
   const fnRef = useRef(fn);
   fnRef.current = fn;
   const alive = useRef(true);
@@ -13,7 +20,8 @@ export default function useFetch(fn, deps = [], { interval = 0, enabled = true }
       const data = await fnRef.current();
       if (alive.current) setState({ data, error: null, loading: false });
     } catch (error) {
-      if (alive.current && error?.name !== "AbortError") setState((s) => ({ ...s, error, loading: false }));
+      if (alive.current && error?.name !== "AbortError")
+        setState((s) => ({ ...s, error, loading: false }));
     }
   }, []);
 
@@ -21,12 +29,13 @@ export default function useFetch(fn, deps = [], { interval = 0, enabled = true }
     alive.current = true;
     if (!enabled) return undefined;
     load(false);
-    const timer = interval ? window.setInterval(() => load(true), interval) : null;
+    const timer = interval
+      ? window.setInterval(() => load(true), interval)
+      : null;
     return () => {
       alive.current = false;
       if (timer) window.clearInterval(timer);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [...deps, enabled, interval, load]);
 
   return { ...state, reload: () => load(false) };

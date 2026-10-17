@@ -104,8 +104,6 @@ const initialState = {
   topupError: null,
 };
 
-// FIX: a finished session used to stay in `activeSession` (the dashboard kept showing "Stop charging").
-// Now: final states leave the active slot and the wallet balance is taken from the final bill.
 function mergeSession(state, session) {
   if (!session) {
     state.activeSession = null;
@@ -123,7 +121,7 @@ function mergeSession(state, session) {
       state.balancePiastres = session.balancePiastres;
     }
   } else if (!alreadyFinal) {
-    state.activeSession = session; // ignore a late non-final update for a session we already saw finish
+    state.activeSession = session;
   }
 }
 
@@ -192,7 +190,7 @@ const slice = createSlice({
       .addCase(stopCharging.fulfilled, (state, action) => {
         state.actionStatus = "succeeded";
         state.actionError = null;
-        mergeSession(state, action.payload); // stays active while STOPPING, leaves when the bill is final
+        mergeSession(state, action.payload);
       })
       .addCase(stopCharging.rejected, (state, action) => {
         state.actionStatus = "failed";

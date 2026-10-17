@@ -1,11 +1,37 @@
-// Every OCPP command the backend allows (backend/ocpp/adminCommands.js stays the authority), described in plain words.
-// Text is bilingual { en, ar } and shown through useI18n().tx. risk: safe | careful | dangerous.
 const L = (en, ar) => ({ en, ar });
-const sel = (key, label, options, extra = {}) => ({ key, label, type: "select", options, ...extra });
-const num = (key, label, min, max, extra = {}) => ({ key, label, type: "number", min, max, ...extra });
-const txt = (key, label, extra = {}) => ({ key, label, type: "text", ...extra });
-const dt = (key, label, extra = {}) => ({ key, label, type: "datetime", ...extra });
-const json = (key, label, extra = {}) => ({ key, label, type: "json", ...extra });
+const sel = (key, label, options, extra = {}) => ({
+  key,
+  label,
+  type: "select",
+  options,
+  ...extra,
+});
+const num = (key, label, min, max, extra = {}) => ({
+  key,
+  label,
+  type: "number",
+  min,
+  max,
+  ...extra,
+});
+const txt = (key, label, extra = {}) => ({
+  key,
+  label,
+  type: "text",
+  ...extra,
+});
+const dt = (key, label, extra = {}) => ({
+  key,
+  label,
+  type: "datetime",
+  ...extra,
+});
+const json = (key, label, extra = {}) => ({
+  key,
+  label,
+  type: "json",
+  ...extra,
+});
 
 export function localDateTime(offsetMin = 0) {
   const d = new Date(Date.now() + offsetMin * 60000);
@@ -14,12 +40,28 @@ export function localDateTime(offsetMin = 0) {
 }
 
 const RAW_PROFILE = JSON.stringify(
-  { chargingProfileId: 101, stackLevel: 1, chargingProfilePurpose: "TxDefaultProfile", chargingProfileKind: "Relative", chargingSchedule: { chargingRateUnit: "A", chargingSchedulePeriod: [{ startPeriod: 0, limit: 16 }] } },
+  {
+    chargingProfileId: 101,
+    stackLevel: 1,
+    chargingProfilePurpose: "TxDefaultProfile",
+    chargingProfileKind: "Relative",
+    chargingSchedule: {
+      chargingRateUnit: "A",
+      chargingSchedulePeriod: [{ startPeriod: 0, limit: 16 }],
+    },
+  },
   null,
   2,
 );
 
-export const GOALS = ["charging", "limits", "status", "settings", "cards", "maintenance"];
+export const GOALS = [
+  "charging",
+  "limits",
+  "status",
+  "settings",
+  "cards",
+  "maintenance",
+];
 
 // prettier-ignore
 export const COMMAND_CARDS = [
@@ -144,11 +186,15 @@ export const COMMAND_CARDS = [
     fields: [txt("vendorId", L("Vendor name", "اسم المصنّع"), { default: "ABB" }), txt("messageId", L("Message name", "اسم الرسالة"), { optional: true }), txt("data", L("Data", "البيانات"), { optional: true })] },
 ];
 
-export const CARD_BY_NAME = Object.fromEntries(COMMAND_CARDS.map((c) => [c.name, c]));
+export const CARD_BY_NAME = Object.fromEntries(
+  COMMAND_CARDS.map((c) => [c.name, c]),
+);
 
-/** Plain title for a method name used in sentences (falls back to the technical name). */
 export function methodTitle(method, tx) {
-  const names = { SetChargingProfile: "SetCurrentLimit", RemoteStartTransaction: "RemoteStartTransaction" };
+  const names = {
+    SetChargingProfile: "SetCurrentLimit",
+    RemoteStartTransaction: "RemoteStartTransaction",
+  };
   const card = CARD_BY_NAME[method] || CARD_BY_NAME[names[method]];
   return card ? tx(card.title) : method || "";
 }
@@ -156,14 +202,14 @@ export function methodTitle(method, tx) {
 export function initialForm(card) {
   const out = {};
   for (const f of card.fields) {
-    if (f.default !== undefined) out[f.key] = typeof f.default === "function" ? f.default() : f.default;
+    if (f.default !== undefined)
+      out[f.key] = typeof f.default === "function" ? f.default() : f.default;
     else if (f.type === "select" && !f.optional) out[f.key] = f.options[0];
     else out[f.key] = "";
   }
   return out;
 }
 
-/** Returns { params } or { errorKey, label } where errorKey is a dictionary key. */
 export function buildParams(card, form) {
   const params = {};
   for (const f of card.fields) {
@@ -173,16 +219,27 @@ export function buildParams(card, form) {
       continue;
     }
     if (card.name === "GetConfiguration" && f.key === "key") {
-      params.key = String(raw).split(",").map((k) => k.trim()).filter(Boolean);
+      params.key = String(raw)
+        .split(",")
+        .map((k) => k.trim())
+        .filter(Boolean);
     } else if (f.type === "number") {
       const n = Number(raw);
-      if (!Number.isFinite(n)) return { errorKey: "act.badNumber", label: f.label };
-      if (f.min !== undefined && n < f.min) return { errorKey: "act.tooLow", label: f.label, vars: { min: f.min } };
-      if (f.max !== undefined && n > f.max) return { errorKey: "act.tooHigh", label: f.label, vars: { max: f.max } };
+      if (!Number.isFinite(n))
+        return { errorKey: "act.badNumber", label: f.label };
+      if (f.min !== undefined && n < f.min)
+        return { errorKey: "act.tooLow", label: f.label, vars: { min: f.min } };
+      if (f.max !== undefined && n > f.max)
+        return {
+          errorKey: "act.tooHigh",
+          label: f.label,
+          vars: { max: f.max },
+        };
       params[f.key] = n;
     } else if (f.type === "datetime") {
       const d = new Date(raw);
-      if (Number.isNaN(d.getTime())) return { errorKey: "act.badDate", label: f.label };
+      if (Number.isNaN(d.getTime()))
+        return { errorKey: "act.badDate", label: f.label };
       params[f.key] = d.toISOString();
     } else if (f.type === "json") {
       try {

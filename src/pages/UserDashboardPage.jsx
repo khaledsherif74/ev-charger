@@ -23,8 +23,6 @@ import EmptyState from "../components/common/EmptyState";
 import Spinner from "../components/common/Spinner";
 import { formatDate, formatMoneyPiastres, formatKwh } from "../utils/format";
 
-// The backend only starts a session when the cable is plugged in: connector status "Preparing".
-// (This page used to require "Available", so Start was enabled exactly when the server would refuse it.)
 const isReady = (charger) => charger.online && charger.status === "Preparing";
 
 function statusTone(status, online) {
