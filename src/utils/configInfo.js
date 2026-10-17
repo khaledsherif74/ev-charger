@@ -91,3 +91,29 @@ export function groupConfig(entries, query = "", tx = (o) => o.en) {
   }
   return GROUPS.map((g) => ({ ...g, entries: buckets.get(g.id) })).filter((g) => g.entries.length);
 }
+
+// Settings the owner may change from the Actions page (standard writable OCPP 1.6 keys + ABB FreevendEnabled).
+export const WRITABLE_KEYS = [
+  "FreevendEnabled", "AuthorizeRemoteTxRequests", "MeterValueSampleInterval", "MeterValuesSampledData", "HeartbeatInterval",
+  "ConnectionTimeOut", "WebSocketPingInterval", "MinimumStatusDuration", "ClockAlignedDataInterval", "MeterValuesAlignedData",
+  "StopTxnSampledData", "StopTxnAlignedData", "StopTransactionOnEVSideDisconnect", "UnlockConnectorOnEVSideDisconnect",
+  "StopTransactionOnInvalidId", "AuthorizationCacheEnabled", "LocalAuthorizeOffline", "LocalPreAuthorize", "LocalAuthListEnabled",
+  "AllowOfflineTxForUnknownId", "MaxEnergyOnInvalidId", "ResetRetries", "TransactionMessageAttempts", "TransactionMessageRetryInterval",
+  "LightIntensity", "BlinkRepeat", "ConnectorPhaseRotation",
+];
+export const BOOL_KEYS = new Set([
+  "FreevendEnabled", "AuthorizeRemoteTxRequests", "StopTransactionOnEVSideDisconnect", "UnlockConnectorOnEVSideDisconnect",
+  "StopTransactionOnInvalidId", "AuthorizationCacheEnabled", "LocalAuthorizeOffline", "LocalPreAuthorize", "LocalAuthListEnabled",
+  "AllowOfflineTxForUnknownId",
+]);
+
+/** Dropdown groups: [{ id, title, keys:[{key, name, what, recommended, unit}] }] in menu order. */
+export function writableGroups() {
+  return GROUPS.map((g) => ({
+    ...g,
+    keys: WRITABLE_KEYS.filter((k) => describeKey(k).group === g.id).map((k) => {
+      const d = describeKey(k);
+      return { key: k, name: d.name, what: d.what, recommended: d.recommended, unit: d.unit };
+    }),
+  })).filter((g) => g.keys.length);
+}

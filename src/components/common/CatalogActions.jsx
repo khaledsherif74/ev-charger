@@ -59,7 +59,7 @@ export function ActionButton({ id, ctx = {}, className = "button button-secondar
     try {
       const r = await adminApi.command(ctx.chargerId, action.command, action.params({ sessionId }));
       const ex = explainResult(r);
-      setNote({ tone: ex.tone, text: t(ex.textKey), code: ex.code });
+      setNote({ tone: ex.tone, text: t(ex.textKey), code: ex.code, ms: r.ms });
     } catch (e) {
       setNote({ tone: "bad", text: errorText(e, t), code: errorCatalogCode(e) });
     } finally {

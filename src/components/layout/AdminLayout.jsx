@@ -1,17 +1,38 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import {
-  Activity, Bell, Cable, CircleCheckBig, CreditCard, Globe, History, House, LifeBuoy, LogOut, Menu, Plug,
-  PlusCircle, RadioTower, Settings, SlidersHorizontal, Stethoscope, UsersRound, Wrench, X, CircleUserRound,
+  Activity,
+  Bell,
+  Cable,
+  CircleCheckBig,
+  CreditCard,
+  Globe,
+  History,
+  House,
+  LifeBuoy,
+  LogOut,
+  Menu,
+  Plug,
+  PlusCircle,
+  RadioTower,
+  Settings,
+  SlidersHorizontal,
+  Stethoscope,
+  UsersRound,
+  Wrench,
+  X,
+  CircleUserRound,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { logoutAdmin } from "../../features/adminAuth/adminAuthSlice";
-import { fetchAlerts, selectAlertCount } from "../../features/alerts/alertsSlice";
+import {
+  fetchAlerts,
+  selectAlertCount,
+} from "../../features/alerts/alertsSlice";
 import useAdminRealtime from "../../hooks/useAdminRealtime";
 import { useI18n } from "../../i18n";
 import { HelpProvider } from "../common/HelpPanel";
 
-// Every page is always in the menu. Nothing is hidden behind a "technical tools" toggle.
 const GROUPS = [
   {
     key: "nav.group.daily",
@@ -26,12 +47,16 @@ const GROUPS = [
   {
     key: "nav.group.fix",
     items: [
+      {
+        to: "/admin/charger-settings",
+        key: "nav.chargerSettings",
+        icon: SlidersHorizontal,
+      },
+      { to: "/admin/check", key: "nav.check", icon: Stethoscope },
+      { to: "/admin/timeline", key: "nav.timeline", icon: History },
+      { to: "/admin/actions", key: "nav.actions", icon: Wrench },
       { to: "/admin/alerts", key: "nav.alerts", icon: Bell, badge: true },
       { to: "/admin/help", key: "nav.help", icon: LifeBuoy },
-      { to: "/admin/actions", key: "nav.actions", icon: Wrench },
-      { to: "/admin/timeline", key: "nav.timeline", icon: History },
-      { to: "/admin/charger-settings", key: "nav.chargerSettings", icon: SlidersHorizontal },
-      { to: "/admin/check", key: "nav.check", icon: Stethoscope },
     ],
   },
   {
@@ -53,7 +78,6 @@ export default function AdminLayout() {
   const dispatch = useDispatch();
   useAdminRealtime();
 
-  // Alerts also load by themselves, so the badge is right even if the live connection is down.
   useEffect(() => {
     dispatch(fetchAlerts());
     const timer = window.setInterval(() => dispatch(fetchAlerts()), 30000);
@@ -61,10 +85,23 @@ export default function AdminLayout() {
   }, [dispatch]);
 
   const link = ({ to, key, icon: Icon, end, badge }) => (
-    <NavLink key={to} to={to} end={end} className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`} onClick={() => setMobileOpen(false)}>
+    <NavLink
+      key={to}
+      to={to}
+      end={end}
+      className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
+      onClick={() => setMobileOpen(false)}
+    >
       <Icon size={19} strokeWidth={1.8} />
       <span>{t(key)}</span>
-      {badge && alertCount > 0 ? <span className="nav-badge" aria-label={t("nav.alertsCount", { n: alertCount })}>{alertCount}</span> : null}
+      {badge && alertCount > 0 ? (
+        <span
+          className="nav-badge"
+          aria-label={t("nav.alertsCount", { n: alertCount })}
+        >
+          {alertCount}
+        </span>
+      ) : null}
     </NavLink>
   );
 
@@ -80,7 +117,12 @@ export default function AdminLayout() {
               <div className="brand-name">VoltOps</div>
               <div className="brand-subtitle">{t("common.station")}</div>
             </div>
-            <button type="button" className="icon-button drawer-close" onClick={() => setMobileOpen(false)} aria-label={t("dlg.cancel")}>
+            <button
+              type="button"
+              className="icon-button drawer-close"
+              onClick={() => setMobileOpen(false)}
+              aria-label={t("dlg.cancel")}
+            >
               <X size={18} />
             </button>
           </div>
@@ -103,17 +145,33 @@ export default function AdminLayout() {
                 <span>{t("common.admin")}</span>
               </div>
             </div>
-            <button type="button" className="logout-button" onClick={() => dispatch(logoutAdmin())}>
+            <button
+              type="button"
+              className="logout-button"
+              onClick={() => dispatch(logoutAdmin())}
+            >
               <LogOut size={17} />
               <span>{t("common.signOut")}</span>
             </button>
           </div>
         </aside>
-        {mobileOpen ? <button type="button" className="drawer-backdrop" aria-label={t("dlg.cancel")} onClick={() => setMobileOpen(false)} /> : null}
+        {mobileOpen ? (
+          <button
+            type="button"
+            className="drawer-backdrop"
+            aria-label={t("dlg.cancel")}
+            onClick={() => setMobileOpen(false)}
+          />
+        ) : null}
 
         <main className="main-shell">
           <header className="topbar">
-            <button type="button" className="icon-button mobile-menu" onClick={() => setMobileOpen((v) => !v)} aria-label={t("nav.menu")}>
+            <button
+              type="button"
+              className="icon-button mobile-menu"
+              onClick={() => setMobileOpen((v) => !v)}
+              aria-label={t("nav.menu")}
+            >
               <Menu size={20} />
             </button>
             <div className="topbar-spacer" />

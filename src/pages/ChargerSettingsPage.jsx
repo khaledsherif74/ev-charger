@@ -116,7 +116,7 @@ export default function ChargerSettingsPage() {
     try {
       const r = await adminApi.command(chargerId, "ChangeConfiguration", { key: entry.key, value });
       const ex = explainResult(r);
-      setNote({ tone: ex.tone, text: t(ex.textKey), code: ex.code });
+      setNote({ tone: ex.tone, text: t(ex.textKey), code: ex.code, ms: r.ms });
       dispatch(fetchChargerConfig(chargerId));
       dispatch(fetchAlerts());
     } catch (e) {
@@ -172,8 +172,8 @@ export default function ChargerSettingsPage() {
                   <div className="config-group-head">
                     <h3>{tx(g.title)}</h3>
                   </div>
-                  <div className="table-shell table-scroll">
-                    <table className="data-table compact">
+                  <div className="table-shell table-fit">
+                    <table className="data-table compact config-table">
                       <thead>
                         <tr>
                           <th>{t("cfg.col.setting")}</th>
@@ -186,15 +186,15 @@ export default function ChargerSettingsPage() {
                       <tbody>
                         {g.entries.map((e) => (
                           <tr key={e.key} className={e.status === "check" ? "row-review" : ""}>
-                            <td>
+                            <td data-label={t("cfg.col.setting")}>
                               <strong>{tx(e.info.name)}</strong>
                               <br />
                               <code className="key-code" dir="ltr">{e.key}</code>
                             </td>
-                            <td dir="ltr">{e.value === null ? "—" : e.value === "" ? t("cfg.empty") : `${e.value}${e.info.unit ? ` ${e.info.unit}` : ""}`}</td>
-                            <td className="muted">{tx(e.info.what) || "—"}</td>
-                            <td dir="ltr">{e.info.recommended ?? "—"}</td>
-                            <td>
+                            <td dir="ltr" data-label={t("cfg.col.value")}>{e.value === null ? "—" : e.value === "" ? t("cfg.empty") : `${e.value}${e.info.unit ? ` ${e.info.unit}` : ""}`}</td>
+                            <td className="muted" data-label={t("cfg.col.what")}>{tx(e.info.what) || "—"}</td>
+                            <td dir="ltr" data-label={t("cfg.col.recommended")}>{e.info.recommended ?? "—"}</td>
+                            <td data-label={t("common.status")}>
                               {e.status === "ok" ? (
                                 <Badge tone="success">{t("cfg.ok")}</Badge>
                               ) : (

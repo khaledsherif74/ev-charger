@@ -14,6 +14,7 @@ import ChargerSelect from "../components/common/ChargerSelect";
 import TechDetails, { pretty } from "../components/common/TechDetails";
 import ResultNote from "../components/common/ResultNote";
 import { useConfirm } from "../components/common/ConfirmDialog";
+import ConfigChangeFields from "../components/common/ConfigChangeFields";
 
 const RISK_TONE = { safe: "success", careful: "warning", dangerous: "danger" };
 
@@ -93,12 +94,13 @@ function CommandCard({ card, charger, open, onToggle }) {
     }
     setBusy(true);
     setOut(null);
+    const started = Date.now();
     try {
       const result = await adminApi.command(charger.id, card.name, built.params);
       const ex = explainResult(result);
-      setOut({ note: { tone: ex.tone, text: t(ex.textKey), code: ex.code }, result, summary: summarize(card, result, t), at: new Date().toISOString() });
+      setOut({ note: { tone: ex.tone, text: t(ex.textKey), code: ex.code, ms: result.ms }, result, summary: summarize(card, result, t), at: new Date().toISOString() });
     } catch (err) {
-      setOut({ note: { tone: "bad", text: errorText(err, t), code: errorCatalogCode(err), detail: Array.isArray(err.details) ? err.details.map((d) => `${d.field}: ${d.message}`).join(" · ") : undefined }, result: null, at: new Date().toISOString() });
+      setOut({ note: { tone: "bad", ms: Date.now() - started, text: errorText(err, t), code: errorCatalogCode(err), detail: Array.isArray(err.details) ? err.details.map((d) => `${d.field}: ${d.message}`).join(" · ") : undefined }, result: null, at: new Date().toISOString() });
     } finally {
       setBusy(false);
     }
@@ -125,9 +127,11 @@ function CommandCard({ card, charger, open, onToggle }) {
           </div>
           {main.length ? (
             <div className="form-grid">
-              {main.map((f) => (
-                <Field key={f.key} field={f} value={form[f.key]} set={(v) => setForm((c) => ({ ...c, [f.key]: v }))} />
-              ))}
+              {card.name === "ChangeConfiguration" ? (
+                <ConfigChangeFields form={form} setField={(k, v) => setForm((c) => ({ ...c, [k]: v }))} />
+              ) : (
+                main.map((f) => <Field key={f.key} field={f} value={form[f.key]} set={(v) => setForm((c) => ({ ...c, [f.key]: v }))} />)
+              )}
             </div>
           ) : (
             <div className="no-fields">{t("act.noFields")}</div>

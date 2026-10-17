@@ -1,0 +1,7 @@
+{
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://ev-charger.runasp.net/api/:path*" },
+    { "source": "/socket.io/:path*", "destination": "https://ev-charger.runasp.net/socket.io/:path*" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

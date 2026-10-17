@@ -1,7 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { authApi } from "../../api/http";
 
-// Customer session only. Admin sign-in lives in features/adminAuth.
 export const bootstrapSession = createAsyncThunk(
   "auth/bootstrapSession",
   async (_, { rejectWithValue }) => {
@@ -13,6 +12,18 @@ export const bootstrapSession = createAsyncThunk(
       return rejectWithValue(
         error?.message || "Unable to restore the session.",
       );
+    }
+  },
+);
+
+export const registerUser = createAsyncThunk(
+  "auth/registerUser",
+  async ({ name, email, password }, { rejectWithValue }) => {
+    try {
+      await authApi.signup(name.trim(), email.trim(), password);
+      return (await authApi.me()).user;
+    } catch (error) {
+      return rejectWithValue(error?.message || "Registration failed.");
     }
   },
 );
@@ -66,7 +77,22 @@ const slice = createSlice({
         state.user = null;
         state.error = action.payload || action.error.message;
       })
-      // FIX: login no longer resets `initialized` (it re-triggered bootstrapSession and raced with the login).
+      .addCase(registerUser.pending, (state) => {
+        state.status = "loading";
+        state.error = null;
+      })
+      .addCase(registerUser.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.initialized = true;
+        state.user = action.payload;
+        state.error = null;
+      })
+      .addCase(registerUser.rejected, (state, action) => {
+        state.status = "failed";
+        state.initialized = true;
+        state.user = null;
+        state.error = action.payload || action.error.message;
+      })
       .addCase(loginUser.pending, (state) => {
         state.status = "loading";
         state.error = null;

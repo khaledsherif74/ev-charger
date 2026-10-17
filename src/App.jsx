@@ -25,20 +25,10 @@ import UserDashboardPage from "./pages/UserDashboardPage";
 import UserSessionsPage from "./pages/UserSessionsPage";
 import UserWalletPage from "./pages/UserWalletPage";
 
-function AuthGate({ children }) {
-  const initialized = useSelector((state) => state.auth.initialized);
-  if (!initialized) return <div className="full-page-center">Checking session…</div>;
-  return children;
-}
-
-function HomeRedirect() {
-  const user = useSelector((state) => state.auth.user);
-  return <Navigate to={user ? "/app" : "/login"} replace />;
-}
-
 function UserRoute() {
   const { user, initialized } = useSelector((state) => state.auth);
-  if (!initialized) return <div className="full-page-center">Checking session…</div>;
+  if (!initialized)
+    return <div className="full-page-center">Checking session…</div>;
   if (!user) return <Navigate to="/login" replace />;
   return <Outlet />;
 }
@@ -52,16 +42,8 @@ export default function App() {
 
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
+      <Route path="/" element={<LoginPage />} />
       <Route path="/admin/login" element={<AdminLoginPage />} />
-      <Route
-        path="/"
-        element={
-          <AuthGate>
-            <HomeRedirect />
-          </AuthGate>
-        }
-      />
 
       <Route element={<AdminRoute />}>
         <Route element={<AdminLayout />}>
@@ -76,16 +58,31 @@ export default function App() {
           <Route path="/admin/help" element={<HelpCenterPage />} />
           <Route path="/admin/actions" element={<ActionsPage />} />
           <Route path="/admin/timeline" element={<TimelinePage />} />
-          <Route path="/admin/charger-settings" element={<ChargerSettingsPage />} />
+          <Route
+            path="/admin/charger-settings"
+            element={<ChargerSettingsPage />}
+          />
           <Route path="/admin/check" element={<CheckPage />} />
           {/* Setup */}
           <Route path="/admin/add-charger" element={<AddChargerPage />} />
-          <Route path="/admin/connection-guide" element={<ConnectionGuidePage />} />
+          <Route
+            path="/admin/connection-guide"
+            element={<ConnectionGuidePage />}
+          />
           <Route path="/admin/settings" element={<SettingsPage />} />
           {/* old addresses keep working */}
-          <Route path="/admin/advanced" element={<Navigate to="/admin/charger-settings" replace />} />
-          <Route path="/admin/logs" element={<Navigate to="/admin/timeline" replace />} />
-          <Route path="/admin/commands" element={<Navigate to="/admin/actions" replace />} />
+          <Route
+            path="/admin/advanced"
+            element={<Navigate to="/admin/charger-settings" replace />}
+          />
+          <Route
+            path="/admin/logs"
+            element={<Navigate to="/admin/timeline" replace />}
+          />
+          <Route
+            path="/admin/commands"
+            element={<Navigate to="/admin/actions" replace />}
+          />
         </Route>
       </Route>
 
