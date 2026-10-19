@@ -1,3 +1,4 @@
+/* Light theme. Imported AFTER globals.css and admin-extra.css, so it overrides the dark values. */
 :root {
   color-scheme: light;
   color: #1f2937;
@@ -27,6 +28,7 @@ body {
   line-height: 1.5;
 }
 
+/* surfaces */
 .sidebar,
 .user-sidebar {
   background: #fff;
@@ -89,6 +91,7 @@ body {
   background: #f8fafc;
 }
 
+/* text sizes: nothing below 13px, big readable text for non-technical users */
 .nav-item {
   font-size: 15px;
   min-height: 44px;
@@ -211,6 +214,7 @@ details > summary {
   display: list-item;
 }
 
+/* buttons */
 .button-primary {
   color: #fff;
   background: var(--primary);
@@ -233,6 +237,7 @@ details > summary {
   box-shadow: none;
 }
 
+/* badges, metrics */
 .badge-success {
   color: #166534;
   background: #e6f6ec;
@@ -300,6 +305,7 @@ details > summary {
   color: var(--text);
 }
 
+/* code-like areas (technical details) */
 .log-payload,
 .response-json {
   background: #f6f8fb;
@@ -321,6 +327,7 @@ details > summary {
   background: #f8fafc;
 }
 
+/* messages */
 .error-state {
   background: #fdecef;
   border-color: #f6c1cb;
@@ -363,6 +370,7 @@ details > summary {
   border-top-color: var(--primary);
 }
 
+/* login pages */
 .auth-page,
 .auth-panel {
   background: #f6f8fb;
@@ -403,6 +411,7 @@ details > summary {
   margin-bottom: 18px;
 }
 
+/* customer pages */
 .user-balance strong {
   color: #065f46;
 }
@@ -422,6 +431,7 @@ details > summary {
   background: #f6f9ff;
 }
 
+/* ───────────── admin components ───────────── */
 .lang-btn {
   display: inline-flex;
   align-items: center;
@@ -566,6 +576,7 @@ details > summary {
   transform: rotate(180deg);
 }
 
+/* notes and result lines */
 .note {
   margin-top: 12px;
   padding: 10px 12px;
@@ -646,6 +657,7 @@ details > summary {
   margin: 14px 0;
 }
 
+/* modal (replaces window.confirm) */
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -712,6 +724,7 @@ details > summary {
   padding: 16px 20px 20px;
 }
 
+/* help side panel: opens on the reading-end side */
 .help-backdrop {
   position: fixed;
   inset: 0;
@@ -746,6 +759,7 @@ details > summary {
   overflow-y: auto;
 }
 
+/* catalog entry */
 .entry-head {
   display: flex;
   gap: 8px;
@@ -799,13 +813,14 @@ details > summary {
   margin-bottom: 4px;
 }
 
+/* alerts */
 .alert-list {
   display: grid;
   gap: 14px;
   padding: 4px;
 }
 .section-body {
-  padding: 16px;
+  padding: 10px;
 }
 .section-body > .alert-list {
   padding: 16px;
@@ -906,6 +921,7 @@ details > summary {
   flex-wrap: wrap;
 }
 
+/* help center */
 .help-group h2 {
   font-size: 18px;
   margin: 22px 0 10px;
@@ -949,6 +965,7 @@ details > summary {
   padding: 4px 18px 18px;
 }
 
+/* chargers */
 .charger-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
@@ -1024,6 +1041,7 @@ details > summary {
   line-height: 1.5;
 }
 
+/* action cards */
 .cmd-list {
   display: grid;
   gap: 10px;
@@ -1097,6 +1115,7 @@ details > summary {
   margin-top: 10px;
 }
 
+/* timeline */
 .timeline {
   list-style: none;
   margin: 0;
@@ -1151,6 +1170,7 @@ details > summary {
   font-size: 13px;
 }
 
+/* check my charger */
 .check-list {
   list-style: none;
   margin: 0;
@@ -1186,6 +1206,7 @@ details > summary {
   flex: 0 0 auto;
 }
 
+/* setup pages */
 .add-form {
   display: grid;
   gap: 10px;
@@ -1284,6 +1305,7 @@ details > summary {
   margin-top: 8px;
 }
 
+/* Arabic / right-to-left */
 [dir="rtl"] body {
   font-family: "Segoe UI", Tahoma, Inter, system-ui, sans-serif;
 }
@@ -1409,6 +1431,7 @@ details > summary {
   }
 }
 
+/* charger card + its main settings side by side */
 .charger-cards {
   grid-template-columns: 1fr;
 }
@@ -1501,6 +1524,7 @@ details > summary {
   }
 }
 
+/* settings tables: fit the screen, never scroll sideways */
 .table-fit {
   overflow: visible;
 }
@@ -1595,4 +1619,136 @@ details > summary {
 .limit-unknown {
   color: var(--muted);
   font-weight: 500;
+}
+
+/* ───────── evaluation fixes: contrast, readable values, chart, small details ───────── */
+:root {
+  --muted: #475569;
+  --muted-2: #4b5b70;
+}
+.field > span,
+.hint,
+.muted,
+.eyebrow,
+.metric-label,
+.metric-helper,
+.charger-card-head span,
+.alert-top,
+.tl-meta,
+.guide-row p,
+.brand-subtitle,
+.sidebar-section-label,
+.account-meta span,
+th {
+  color: #475569;
+}
+.field > span {
+  font-weight: 650;
+  color: #334155;
+}
+input::placeholder,
+textarea::placeholder {
+  color: #64748b;
+  opacity: 1;
+}
+.brand-block,
+.brand-mark,
+.brand-name {
+  user-select: none;
+  -webkit-user-select: none;
+}
+.search-box.wide {
+  min-width: 260px;
+}
+.search-box input {
+  min-width: 0;
+  flex: 1;
+}
+.cv-bool {
+  display: inline-flex;
+}
+.chips-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.mini-chip {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #eef2f7;
+  border: 1px solid #d9e1ea;
+  font-size: 13px;
+  color: #334155;
+  white-space: normal;
+}
+.pay-actions {
+  min-width: 200px;
+}
+.pay-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.pay-buttons .button {
+  min-height: 40px;
+  padding: 0 10px;
+}
+.chart {
+  margin: 14px 0 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fbfdfc;
+}
+.chart figcaption {
+  font-size: 14px;
+  font-weight: 650;
+  color: #334155;
+  margin-bottom: 6px;
+}
+.chart svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  direction: ltr;
+}
+.chart-axis {
+  stroke: #cbd5e1;
+  stroke-width: 1;
+}
+.chart-label {
+  font-size: 11px;
+  fill: #475569;
+}
+.chart-area {
+  fill: rgba(15, 159, 127, 0.16);
+}
+.chart-line {
+  fill: none;
+  stroke: #0f9f7f;
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+.chart-dot {
+  fill: #0b7f65;
+}
+.chart-now {
+  margin-top: 6px;
+  font-size: 16px;
+  font-weight: 800;
+  color: #065f46;
+}
+.chart-empty {
+  margin-top: 14px;
+  padding: 18px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 12px;
+  color: var(--muted);
+  text-align: center;
+  font-size: 14px;
+}
+.field small.hint {
+  display: block;
+  margin-top: 4px;
 }

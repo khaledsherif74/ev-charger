@@ -1,32 +1,25 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { adminAuthApi } from "../../api/http";
 
-export const bootstrapAdmin = createAsyncThunk(
-  "adminAuth/bootstrap",
-  async (_, { rejectWithValue }) => {
-    try {
-      const { admin } = await adminAuthApi.me();
-      return admin;
-    } catch (error) {
-      if (error?.status === 401) return null;
-      return rejectWithValue(
-        error?.message || "Unable to check the admin session.",
-      );
-    }
-  },
-);
+export const bootstrapAdmin = createAsyncThunk("adminAuth/bootstrap", async (_, { rejectWithValue }) => {
+  try {
+    const { admin } = await adminAuthApi.me();
+    return admin;
+  } catch (error) {
+    if (error?.status === 401) return null;
+    return rejectWithValue(error?.message || "Unable to check the admin session.");
+  }
+});
 
-export const loginAdmin = createAsyncThunk(
-  "adminAuth/login",
-  async ({ username, password }, { rejectWithValue }) => {
-    try {
-      const { admin } = await adminAuthApi.login(username.trim(), password);
-      return admin;
-    } catch (error) {
-      return rejectWithValue(error?.message || "Admin sign-in failed.");
-    }
-  },
-);
+// code = the 6-digit two-factor code (only needed when the server has two-factor login switched on)
+export const loginAdmin = createAsyncThunk("adminAuth/login", async ({ username, password, code }, { rejectWithValue }) => {
+  try {
+    const { admin } = await adminAuthApi.login(username.trim(), password, code);
+    return admin;
+  } catch (error) {
+    return rejectWithValue({ message: error?.message || "Admin sign-in failed.", code: error?.code || null });
+  }
+});
 
 export const logoutAdmin = createAsyncThunk("adminAuth/logout", async () => {
   await adminAuthApi.logout().catch(() => {});
@@ -34,16 +27,13 @@ export const logoutAdmin = createAsyncThunk("adminAuth/logout", async () => {
 
 const slice = createSlice({
   name: "adminAuth",
-  initialState: {
-    admin: null,
-    status: "idle",
-    initialized: false,
-    error: null,
-  },
+  initialState: { admin: null, status: "idle", initialized: false, error: null, errorCode: null },
   reducers: {
     clearAdminAuthError(state) {
       state.error = null;
+      state.errorCode = null;
     },
+    // dispatched when any admin API call answers 401 (cookie expired)
     adminSessionExpired(state) {
       state.admin = null;
       state.initialized = true;
@@ -63,24 +53,28 @@ const slice = createSlice({
       .addCase(loginAdmin.pending, (state) => {
         state.status = "loading";
         state.error = null;
+        state.errorCode = null;
       })
       .addCase(loginAdmin.fulfilled, (state, action) => {
         state.status = "succeeded";
         state.admin = action.payload;
         state.initialized = true;
         state.error = null;
+        state.errorCode = null;
       })
       .addCase(loginAdmin.rejected, (state, action) => {
         state.status = "failed";
         state.admin = null;
         state.initialized = true;
-        state.error = action.payload || action.error.message;
+        state.error = action.payload?.message || action.error.message;
+        state.errorCode = action.payload?.code || null;
       })
       .addCase(logoutAdmin.fulfilled, (state) => {
         state.admin = null;
         state.status = "idle";
         state.initialized = true;
         state.error = null;
+        state.errorCode = null;
       });
   },
 });

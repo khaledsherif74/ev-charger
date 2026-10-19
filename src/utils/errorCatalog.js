@@ -1,35 +1,16 @@
-export const SOURCES = [
-  "charger",
-  "connection",
-  "session",
-  "payment",
-  "config",
-  "system",
-];
+// The error catalog: ONE entry per problem, in English and Arabic.
+// Entry = { code, source, severity, actions[], en:{...}, ar:{...} }; use entryFor(code, lang) to read it flat:
+// { code, source, severity, title, meaning, causes[], steps[], actions[], callTechnicianWhen, customerImpact }.
+// Action ids are defined in catalogActions.js (the dashboard buttons).
 
-const mk = ([
-  title,
-  meaning,
-  causes,
-  steps,
-  callTechnicianWhen,
-  customerImpact,
-]) => ({ title, meaning, causes, steps, callTechnicianWhen, customerImpact });
-const E = (code, source, severity, actions, en, ar) => ({
-  code,
-  source,
-  severity,
-  actions,
-  en: mk(en),
-  ar: mk(ar),
-});
+export const SOURCES = ["charger", "connection", "session", "payment", "config", "system"];
 
-const TECH_EN =
-  "The problem is still there after you followed the steps, or it comes back again and again.";
-const TECH_AR =
-  "المشكلة مازالت موجودة بعد تنفيذ الخطوات، أو تتكرر مرة بعد مرة.";
+const mk = ([title, meaning, causes, steps, callTechnicianWhen, customerImpact]) => ({ title, meaning, causes, steps, callTechnicianWhen, customerImpact });
+const E = (code, source, severity, actions, en, ar) => ({ code, source, severity, actions, en: mk(en), ar: mk(ar) });
 
-// prettier-ignore
+const TECH_EN = "The problem is still there after you followed the steps, or it comes back again and again.";
+const TECH_AR = "المشكلة مازالت موجودة بعد تنفيذ الخطوات، أو تتكرر مرة بعد مرة.";
+
 export const CATALOG = [
   // ───────────── Charger error codes (OCPP ChargePointErrorCode) ─────────────
   E("ConnectorLockFailure", "charger", "warning", ["unlock", "restart"],
@@ -590,10 +571,10 @@ export const CATALOG = [
   // ───────────── Payments ─────────────
   E("PAYMENT_PENDING", "payment", "warning", ["openPayments"],
     ["Top-up is waiting for more than an hour", "A customer started a top-up and the payment company never confirmed it.", ["The customer closed the payment page", "The payment failed or was cancelled", "The confirmation message from the payment company did not arrive"],
-      ["Open \"Payments\" and find the payment.", "Check in your payment company account if the money really arrived.", "If it did NOT arrive, nothing to do. It stays Waiting or becomes Failed.", "If it DID arrive and the customer balance did not change, see \"Customer paid but balance did not change\"."],
+      ["Open \"Payments\" and press \"Re-check\" next to the payment. If the money had arrived, its status is repaired.", "Check in your payment company account if the money really arrived.", "If it did NOT arrive, press \"Mark as failed\". After 24 hours the system does this by itself.", "If it DID arrive and the customer balance did not change, see \"Customer paid but balance did not change\"."],
       "The money is taken from the customer but the balance did not change.", "The customer may think they paid but the balance is the same."],
     ["شحن الرصيد ينتظر أكثر من ساعة", "عميل بدأ شحن رصيد ولم تؤكده شركة الدفع.", ["العميل أغلق صفحة الدفع", "فشلت الدفعة أو أُلغيت", "رسالة التأكيد من شركة الدفع لم تصل"],
-      ["افتح «المدفوعات» وابحث عن الدفعة.", "افحص في حساب شركة الدفع هل وصلت الأموال فعلًا.", "إذا لم تصل فلا حاجة لشيء. تبقى «في الانتظار» أو تصبح «فاشلة».", "إذا وصلت ولم يتغير رصيد العميل راجع «العميل دفع ولم يتغير الرصيد»."],
+      ["افتح «المدفوعات» واضغط «إعادة الفحص» بجانب الدفعة. إذا كان المال قد وصل يتم تصحيح حالتها.", "افحص في حساب شركة الدفع هل وصلت الأموال فعلًا.", "إذا لم تصل اضغط «تحديد كفاشلة». وبعد 24 ساعة يفعل النظام ذلك تلقائيًا.", "إذا وصلت ولم يتغير رصيد العميل راجع «العميل دفع ولم يتغير الرصيد»."],
       "تم أخذ المال من العميل لكن الرصيد لم يتغير.", "قد يظن العميل أنه دفع لكن الرصيد كما هو."]),
   E("PAYMENT_MISMATCH", "payment", "critical", ["openPayments"],
     ["Paid amount or currency does not match", "The payment company reported a different amount or currency than the top-up we created, so the system did NOT add the money.", ["Customer changed the amount on the payment page", "Wrong currency", "A wrong or fake confirmation"],
@@ -663,32 +644,21 @@ export const CATALOG = [
 ];
 
 const BY_CODE = new Map(CATALOG.map((e) => [e.code, e]));
-const ALIAS = {
-  OccurrenceConstraintViolation: "OccurenceConstraintViolation",
-  CALLERROR_OccurrenceConstraintViolation:
-    "CALLERROR_OccurenceConstraintViolation",
-};
+const ALIAS = { OccurrenceConstraintViolation: "OccurenceConstraintViolation", CALLERROR_OccurrenceConstraintViolation: "CALLERROR_OccurenceConstraintViolation" };
 
 export const hasEntry = (code) => BY_CODE.has(ALIAS[code] || code);
 
+/** Flat entry in one language. Unknown codes fall back to a generic entry (STOP_* -> STOP_Other, ANSWER_* -> Rejected). */
 export function entryFor(code, lang = "en") {
   let e = BY_CODE.get(ALIAS[code] || code);
   if (!e && typeof code === "string") {
     if (code.startsWith("STOP_")) e = BY_CODE.get("STOP_Other");
     else if (code.startsWith("ANSWER_")) e = BY_CODE.get("ANSWER_Rejected");
-    else if (code.startsWith("CALLERROR_"))
-      e = BY_CODE.get("CALLERROR_GenericError");
+    else if (code.startsWith("CALLERROR_")) e = BY_CODE.get("CALLERROR_GenericError");
   }
   e = e || BY_CODE.get("UNKNOWN");
   const text = e[lang] || e.en;
-  return {
-    code: e.code,
-    requestedCode: code,
-    source: e.source,
-    severity: e.severity,
-    actions: e.actions,
-    ...text,
-  };
+  return { code: e.code, requestedCode: code, source: e.source, severity: e.severity, actions: e.actions, ...text };
 }
 
 export function listEntries(lang = "en") {

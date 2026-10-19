@@ -6,7 +6,7 @@ import useOverview from "../hooks/useOverview";
 import { useI18n } from "../i18n";
 import { entryFor, hasEntry } from "../utils/errorCatalog";
 import { durationText } from "../utils/time";
-import { formatDate, formatKwh, formatMoneyPiastres, sessionTone } from "../utils/format";
+import { formatDate, formatDay, formatKwh, formatMoneyPiastres, sessionTone } from "../utils/format";
 import PageHeader from "../components/common/PageHeader";
 import SectionCard from "../components/common/SectionCard";
 import Badge from "../components/common/Badge";
@@ -78,6 +78,7 @@ export default function SessionsPage() {
             </button>
           ))}
         </div>
+        {from || to ? <div className="hint pad">{t("ses.range", { from: from ? formatDay(from) : "…", to: to ? formatDay(to) : "…" })}</div> : null}
         {list.loading && !list.items.length ? (
           <div className="loading-block">
             <Spinner />

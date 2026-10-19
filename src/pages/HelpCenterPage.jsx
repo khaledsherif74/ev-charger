@@ -37,6 +37,16 @@ export default function HelpCenterPage() {
           <Search size={16} />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("help.search")} aria-label={t("help.search")} />
         </label>
+        <label className="field">
+          <span>{t("help.severity")}</span>
+          <select value={sev} onChange={(e) => setSev(e.target.value)}>
+            {["all", "critical", "warning", "info"].map((x) => (
+              <option key={x} value={x}>
+                {x === "all" ? t("common.all") : t(`sev.${x}`)}
+              </option>
+            ))}
+          </select>
+        </label>
         {chargers.length ? <ChargerSelect chargers={chargers} value={chargerId} onChange={setChargerId} label={t("help.applyTo")} /> : null}
       </div>
       <div className="chips">
@@ -46,14 +56,6 @@ export default function HelpCenterPage() {
           </button>
         ))}
       </div>
-      <div className="chips">
-        {["all", "critical", "warning", "info"].map((s) => (
-          <button key={s} type="button" className={`chip ${sev === s ? "active" : ""}`} onClick={() => setSev(s)}>
-            {s === "all" ? t("common.all") : t(`sev.${s}`)}
-          </button>
-        ))}
-      </div>
-
       {shown.length ? (
         SOURCES.filter((s) => shown.some((e) => e.source === s)).map((s) => (
           <section key={s} className="help-group">

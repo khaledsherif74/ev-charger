@@ -6,6 +6,7 @@ import {
   ChevronRight,
   CircleUserRound,
   Gauge,
+  Globe,
   LogOut,
   Menu,
   ReceiptText,
@@ -14,21 +15,25 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../features/auth/authSlice";
 import useUserRealtime from "../../hooks/useUserRealtime";
+import useDocumentTitle from "../../hooks/useDocumentTitle";
 import { clearUserState } from "../../features/user/userSlice";
+import { useI18n } from "../../i18n";
 
 const NAV = [
-  { to: "/app", label: "Dashboard", icon: Gauge, end: true },
-  { to: "/app/sessions", label: "My Sessions", icon: ReceiptText },
-  { to: "/app/wallet", label: "Wallet", icon: WalletCards },
+  { to: "/app", key: "u.nav.charge", icon: Gauge, end: true },
+  { to: "/app/sessions", key: "u.nav.sessions", icon: ReceiptText },
+  { to: "/app/wallet", key: "u.nav.wallet", icon: WalletCards },
 ];
 
 export default function UserLayout() {
+  const { t, toggle } = useI18n();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const user = useSelector((state) => state.auth.user);
   const balance = useSelector((state) => state.user.balancePiastres);
   const dispatch = useDispatch();
   useUserRealtime();
+  useDocumentTitle(t("u.title.app"));
 
   async function signOut() {
     await dispatch(logout()).unwrap();
@@ -48,13 +53,13 @@ export default function UserLayout() {
           {!collapsed ? (
             <div>
               <div className="brand-name">VoltCharge</div>
-              <div className="brand-subtitle">EV Charging</div>
+              <div className="brand-subtitle">{t("u.brand.sub")}</div>
             </div>
           ) : null}
         </div>
-        <div className="sidebar-section-label">MY ACCOUNT</div>
+        <div className="sidebar-section-label">{t("u.nav.account")}</div>
         <nav className="nav-list">
-          {NAV.map(({ to, label, icon: Icon, end }) => (
+          {NAV.map(({ to, key, icon: Icon, end }) => (
             <NavLink
               key={to}
               to={to}
@@ -63,10 +68,10 @@ export default function UserLayout() {
                 `nav-item ${isActive ? "active" : ""}`
               }
               onClick={() => setMobileOpen(false)}
-              title={collapsed ? label : undefined}
+              title={collapsed ? t(key) : undefined}
             >
               <Icon size={18} strokeWidth={1.8} />
-              {!collapsed ? <span>{label}</span> : null}
+              {!collapsed ? <span>{t(key)}</span> : null}
             </NavLink>
           ))}
         </nav>
@@ -74,7 +79,7 @@ export default function UserLayout() {
         <button
           className="collapse-button desktop-only"
           onClick={() => setCollapsed((value) => !value)}
-          aria-label="Toggle sidebar"
+          aria-label={t("nav.menu")}
         >
           {collapsed ? <ChevronRight size={17} /> : <ChevronLeft size={17} />}
         </button>
@@ -85,14 +90,18 @@ export default function UserLayout() {
             </div>
             {!collapsed ? (
               <div className="account-meta">
-                <strong>{user?.email}</strong>
-                <span>Customer account</span>
+                <strong dir="ltr">{user?.name}</strong>
+                <span>{t("u.nav.customer")}</span>
               </div>
             ) : null}
           </div>
-          <button className="logout-button" onClick={signOut} title="Sign out">
+          <button
+            className="logout-button"
+            onClick={signOut}
+            title={t("common.signOut")}
+          >
             <LogOut size={17} />
-            {!collapsed ? <span>Sign out</span> : null}
+            {!collapsed ? <span>{t("common.signOut")}</span> : null}
           </button>
         </div>
       </aside>
@@ -102,22 +111,25 @@ export default function UserLayout() {
           <button
             className="icon-button mobile-menu"
             onClick={() => setMobileOpen((value) => !value)}
-            aria-label="Open navigation"
+            aria-label={t("nav.menu")}
           >
             <Menu size={20} />
           </button>
           <div className="topbar-context">
             <BatteryCharging size={16} />
-            <span>Personal charging dashboard</span>
+            <span>{t("u.topbar")}</span>
           </div>
           <div className="topbar-spacer" />
           <div className="user-balance">
-            <span>Wallet</span>
-            <strong>{((balance || 0) / 100).toFixed(2)} EGP</strong>
+            <span>{t("u.wallet")}</span>
+            <strong>
+              {((balance || 0) / 100).toFixed(2)} {t("common.egp")}
+            </strong>
           </div>
-          <div className="user-mini">
-            {user?.name ? user.name : user?.email}
-          </div>
+          <button type="button" className="lang-btn" onClick={toggle}>
+            <Globe size={15} />
+            {t("common.language")}
+          </button>
         </header>
         <div className="main-content">
           <Outlet />

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   ArrowRight,
   BatteryCharging,
+  Globe,
   LockKeyhole,
   ShieldCheck,
 } from "lucide-react";
@@ -11,17 +12,23 @@ import {
   loginUser,
   registerUser,
 } from "../features/auth/authSlice";
+import useDocumentTitle from "../hooks/useDocumentTitle";
+import { useI18n } from "../i18n";
 import Spinner from "../components/common/Spinner";
 
 export default function LoginPage() {
   const dispatch = useDispatch();
+  const { t, toggle } = useI18n();
   const { user, status, error } = useSelector((state) => state.auth);
+
   const [isSignUp, setIsSignUp] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", password: "" });
+  useDocumentTitle(t("u.title.login"));
 
   useEffect(() => {
     if (user) window.location.replace("/app");
   }, [user]);
+
   useEffect(() => () => dispatch(clearAuthError()), [dispatch, isSignUp]);
 
   async function submit(event) {
@@ -35,6 +42,11 @@ export default function LoginPage() {
   }
 
   const busy = status === "loading";
+  const shown = !error
+    ? ""
+    : /invalid|password/i.test(error)
+      ? t("u.login.invalid")
+      : error;
 
   return (
     <div className="auth-page">
@@ -48,32 +60,28 @@ export default function LoginPage() {
           <div className="eyebrow">
             VOLT<span>CHARGE</span>
           </div>
-          <h1>Charge your vehicle with a wallet built for the road.</h1>
-          <p>
-            Find connected chargers, start a billed charging session, monitor
-            live session cost, and manage your wallet from one personal
-            dashboard.
-          </p>
+          <h1>{t("u.login.headline")}</h1>
+          <p>{t("u.login.text")}</p>
           <div className="auth-trust-row">
             <ShieldCheck size={16} />
-            <span>
-              Charging actions are enforced by the backend session and wallet
-              services.
-            </span>
+            <span>{t("u.login.trust")}</span>
           </div>
         </div>
       </div>
       <div className="auth-panel">
         <div className="auth-form-wrap">
+          <button type="button" className="lang-btn" onClick={toggle}>
+            <Globe size={15} />
+            {t("common.language")}
+          </button>
           <div className="auth-form-icon">
             <LockKeyhole size={18} />
           </div>
-          <div className="eyebrow">CUSTOMER DASHBOARD</div>
-          <h2>{isSignUp ? "Create an account" : "Sign in"}</h2>
+          <h2>{isSignUp ? "Create an account" : t("u.login.title")}</h2>
           <p className="auth-intro">
             {isSignUp
-              ? "Create your EV charging account to access your wallet and start charging."
-              : "Use your normal EV charging account to access your wallet, charging sessions, and available chargers."}
+              ? "Create your account to start charging and manage your wallet."
+              : t("u.login.intro")}
           </p>
 
           <form className="auth-form" onSubmit={submit}>
@@ -83,11 +91,8 @@ export default function LoginPage() {
                 <input
                   type="text"
                   value={form.name}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      name: event.target.value,
-                    }))
+                  onChange={(e) =>
+                    setForm((c) => ({ ...c, name: e.target.value }))
                   }
                   placeholder="John Doe"
                   required={isSignUp}
@@ -96,46 +101,38 @@ export default function LoginPage() {
             )}
 
             <label className="field">
-              <span>Email</span>
+              <span>{t("u.login.email")}</span>
               <input
                 type="email"
+                dir="ltr"
                 autoComplete="username"
                 value={form.email}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    email: event.target.value,
-                  }))
+                onChange={(e) =>
+                  setForm((c) => ({ ...c, email: e.target.value }))
                 }
                 placeholder="you@example.com"
                 required
-                autoFocus
               />
             </label>
-
             <label className="field">
-              <span>Password</span>
+              <span>{t("u.login.password")}</span>
               <input
                 type="password"
+                dir="ltr"
                 autoComplete={isSignUp ? "new-password" : "current-password"}
                 value={form.password}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    password: event.target.value,
-                  }))
+                onChange={(e) =>
+                  setForm((c) => ({ ...c, password: e.target.value }))
                 }
                 placeholder={
-                  isSignUp
-                    ? "Create a password (min 8 chars)"
-                    : "Enter your password"
+                  isSignUp ? "Create a password (min 8 chars)" : undefined
                 }
                 required
                 minLength={isSignUp ? 8 : undefined}
               />
             </label>
 
-            {error ? <div className="form-error">{error}</div> : null}
+            {shown ? <div className="form-error">{shown}</div> : null}
 
             <button
               className="button button-primary button-wide"
@@ -148,11 +145,13 @@ export default function LoginPage() {
             >
               {busy ? (
                 <Spinner
-                  label={isSignUp ? "Creating account..." : "Signing in…"}
+                  label={
+                    isSignUp ? "Creating account..." : t("login.signingIn")
+                  }
                 />
               ) : (
                 <>
-                  {isSignUp ? "Create account" : "Open my dashboard"}{" "}
+                  {isSignUp ? "Create account" : t("u.login.enter")}{" "}
                   <ArrowRight size={16} />
                 </>
               )}

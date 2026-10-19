@@ -43,20 +43,29 @@ function friendly(path, status, code, fallback) {
 const API_BASE = import.meta.env.VITE_BACKEND_URL || "";
 
 export async function request(path, options = {}) {
-  const { method = "GET", body, signal } = options;
-
+  const { method = "GET", body, signal, timeoutMs } = options;
+  const controller = timeoutMs ? new AbortController() : null;
+  const timer = controller
+    ? setTimeout(() => controller.abort(), timeoutMs)
+    : null;
   let response;
   try {
     response = await fetch(`${API_BASE}${path}`, {
       method,
       credentials: "include",
-      signal,
+      signal: controller ? controller.signal : signal,
       headers: body === undefined ? {} : { "content-type": "application/json" },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   } catch (error) {
-    if (error?.name === "AbortError") throw error;
+    if (error?.name === "AbortError") {
+      if (controller && controller.signal.aborted)
+        throw new ApiError(tStatic("err.TIMEOUT"), 0, "TIMEOUT");
+      throw error;
+    }
     throw new ApiError(tStatic("err.NETWORK"), 0, "NETWORK");
+  } finally {
+    if (timer) clearTimeout(timer);
   }
 
   const payload = await parseBody(response);
@@ -94,10 +103,10 @@ export const authApi = {
 };
 
 export const adminAuthApi = {
-  login: (username, password) =>
+  login: (username, password, code) =>
     request("/api/admin/auth/login", {
       method: "POST",
-      body: { username, password },
+      body: { username, password, ...(code ? { code } : {}) },
     }),
   logout: () => request("/api/admin/auth/logout", { method: "POST", body: {} }),
   me: () => request("/api/admin/auth/me"),
@@ -143,8 +152,10 @@ export const adminApi = {
     request(`/api/admin/customers${qs({ q, before, limit })}`, { signal }),
   payments: ({ status, before, limit = 50, signal } = {}) =>
     request(`/api/admin/payments${qs({ status, before, limit })}`, { signal }),
-  chargerConfig: (chargerId, { signal } = {}) =>
-    request(`/api/admin/chargers/${cid(chargerId)}/config`, { signal }),
+  chargerConfig: (chargerId) =>
+    request(`/api/admin/chargers/${cid(chargerId)}/config`, {
+      timeoutMs: 90000,
+    }),
   chargerEvents: (chargerId, { before, limit = 50, signal } = {}) =>
     request(
       `/api/admin/chargers/${cid(chargerId)}/events${qs({ before, limit })}`,
@@ -162,6 +173,10 @@ export const adminApi = {
       method: "POST",
       body: { meterStopWh },
     }),
+  recheckPayment: (id) =>
+    request(`/api/admin/payments/${id}/recheck`, { method: "POST", body: {} }),
+  failPayment: (id) =>
+    request(`/api/admin/payments/${id}/fail`, { method: "POST", body: {} }),
   createCharger: (id) =>
     request("/api/admin/chargers", { method: "POST", body: { id } }),
   resetChargerSecret: (id) =>

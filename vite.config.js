@@ -21,12 +21,6 @@ export default defineConfig(({ mode }) => {
           secure: false,
           ws: true,
         },
-        "/ocpp": {
-          target,
-          changeOrigin: true,
-          secure: true,
-          ws: true,
-        },
       },
     },
   };
