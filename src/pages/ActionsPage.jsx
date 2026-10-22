@@ -1,7 +1,8 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { ChevronDown, Search, Send, ShieldAlert } from "lucide-react";
 import { adminApi } from "../api/http";
 import useOverview from "../hooks/useOverview";
+import { useChargerLive, invalidateChargerLive } from "../hooks/useChargerLive";
 import { useI18n } from "../i18n";
 import {
   COMMAND_CARDS,
@@ -23,23 +24,106 @@ import ConfigChangeFields from "../components/common/ConfigChangeFields";
 
 const RISK_TONE = { safe: "success", careful: "warning", dangerous: "danger" };
 
-function summarize(card, result, t) {
+// Methods that can change charger state — after them the cache is invalidated
+// so the next open re-reads.
+const MUTATING_METHODS = new Set([
+  "ChangeConfiguration",
+  "SetChargingProfile",
+  "ClearChargingProfile",
+  "SendLocalList",
+  "ClearCache",
+  "Reset",
+  "UpdateFirmware",
+  "ChangeAvailability",
+]);
+
+// Cards where connectorId refers to the plug currently in use.
+const PER_PLUG_CARDS = new Set([
+  "RemoteStartTransaction",
+  "UnlockConnector",
+  "SetCurrentLimit",
+  "GetCompositeSchedule",
+  "SetChargingProfile",
+  "TriggerMessage",
+  "ReserveNow",
+]);
+
+function summarizeByMethod(method, result, t) {
   if (!result.ok) return null;
   const r = result.response || {};
-  if (card.name === "GetCompositeSchedule" && r.status === "Accepted") {
+  if (method === "GetCompositeSchedule" && r.status === "Accepted") {
     const per = r.chargingSchedule?.chargingSchedulePeriod || [];
     const unit = r.chargingSchedule?.chargingRateUnit || "A";
     return per.length
       ? t("sum.limit", { v: per.map((p) => `${p.limit} ${unit}`).join(", ") })
       : t("sum.noLimit");
   }
-  if (card.name === "GetLocalListVersion" && typeof r.listVersion === "number")
+  if (method === "GetLocalListVersion" && typeof r.listVersion === "number") {
     return r.listVersion < 0
       ? t("sum.noList")
       : t("sum.listVersion", { v: r.listVersion });
-  if (card.name === "GetConfiguration" && Array.isArray(r.configurationKey))
+  }
+  if (method === "GetConfiguration" && Array.isArray(r.configurationKey)) {
     return t("sum.settings", { n: r.configurationKey.length });
+  }
   return null;
+}
+
+/**
+ * Decide which form fields should be seeded from the live charger snapshot.
+ * Synchronous — the snapshot is already in the cache by the time a card opens.
+ */
+function pickSeeds(card, charger, live, t) {
+  if (!charger?.online) return { patches: {}, note: null };
+  const patches = {};
+  let note = null;
+  const activeConnector = charger.activeSession?.connectorId ?? 1;
+
+  if (
+    PER_PLUG_CARDS.has(card.name) &&
+    card.fields.some((f) => f.key === "connectorId")
+  )
+    patches.connectorId = activeConnector;
+
+  if (card.name === "RemoteStopTransaction" && charger.activeSession?.id)
+    patches.transactionId = charger.activeSession.id;
+
+  if (card.name === "ChangeAvailability")
+    patches.type =
+      charger.status === "Unavailable" ? "Operative" : "Inoperative";
+
+  if (card.name === "SetCurrentLimit") {
+    if (live?.limit?.amps != null) {
+      patches.limitAmps = Math.max(
+        6,
+        Math.min(32, Math.round(live.limit.amps)),
+      );
+      note = {
+        tone: "set",
+        text: t("ch.limitNow", { a: live.limit.amps }),
+      };
+    } else if (live?.errors?.some((e) => e.step === "GetCompositeSchedule")) {
+      note = { tone: "unknown", text: t("ch.limitUnknown") };
+    } else if (live) {
+      note = { tone: "none", text: t("ch.limitNone") };
+    }
+  }
+
+  if (
+    card.name === "SendLocalList" &&
+    typeof live?.localListVersion === "number"
+  ) {
+    patches.listVersion = Math.max(0, live.localListVersion + 1);
+    note =
+      live.localListVersion < 0
+        ? { tone: "none", text: t("sum.noList") }
+        : {
+            tone: "set",
+            text: t("sum.listVersion", { v: live.localListVersion }),
+          };
+  }
+
+  return { patches, note };
 }
 
 function Field({ field, value, set }) {
@@ -87,15 +171,62 @@ function Field({ field, value, set }) {
   );
 }
 
-function CommandCard({ card, charger, chargerConfig, open, onToggle }) {
-  const { t, tx, lang } = useI18n();
+function CommandCard({ card, charger, open, onToggle, live }) {
+  const { t, tx } = useI18n();
   const { confirm, dialog } = useConfirm();
   const [form, setForm] = useState(() => initialForm(card));
   const [busy, setBusy] = useState(false);
   const [out, setOut] = useState(null);
   const [formError, setFormError] = useState("");
+  const [seedNote, setSeedNote] = useState(null);
+  const touchedRef = useRef(new Set());
+  const wasOpenRef = useRef(false);
+
   const main = card.fields.filter((f) => !f.advanced);
   const more = card.fields.filter((f) => f.advanced);
+
+  // Reset the form every time the card goes from closed → open.
+  useEffect(() => {
+    if (open && !wasOpenRef.current) {
+      wasOpenRef.current = true;
+      touchedRef.current = new Set();
+      setForm(initialForm(card));
+      setOut(null);
+    } else if (!open && wasOpenRef.current) {
+      wasOpenRef.current = false;
+    }
+  }, [open, card.name]);
+
+  // Apply seeds whenever the card is open. Deps cover every source that can
+  // change a seed: the card, the charger, the active session, the live cache.
+  useEffect(() => {
+    if (!open || !charger?.online) return;
+    const { patches, note } = pickSeeds(card, charger, live?.data, t);
+    if (Object.keys(patches).length) {
+      setForm((c) => {
+        const next = { ...c };
+        for (const [k, v] of Object.entries(patches))
+          if (!touchedRef.current.has(k)) next[k] = v;
+        return next;
+      });
+    }
+    setSeedNote(note);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    open,
+    card.name,
+    charger?.id,
+    charger?.online,
+    charger?.activeSession?.id,
+    charger?.activeSession?.connectorId,
+    charger?.status,
+    live?.data,
+  ]);
+
+  function setField(key, value) {
+    touchedRef.current.add(key);
+    setForm((c) => ({ ...c, [key]: value }));
+  }
 
   async function send(e) {
     e.preventDefault();
@@ -137,9 +268,13 @@ function CommandCard({ card, charger, chargerConfig, open, onToggle }) {
           ms: result.ms,
         },
         result,
-        summary: summarize(card, result, t),
+        summary: summarizeByMethod(card.name, result, t),
         at: new Date().toISOString(),
       });
+      if (MUTATING_METHODS.has(card.name)) {
+        invalidateChargerLive(charger.id);
+        live?.reload?.();
+      }
     } catch (err) {
       setOut({
         note: {
@@ -160,6 +295,7 @@ function CommandCard({ card, charger, chargerConfig, open, onToggle }) {
   }
 
   const ctx = { chargerId: charger?.id };
+  const chargerConfig = live?.data?.config || {};
   return (
     <section className={`cmd-card risk-${card.risk} ${open ? "open" : ""}`}>
       <button
@@ -183,12 +319,19 @@ function CommandCard({ card, charger, chargerConfig, open, onToggle }) {
           <div className="cmd-when">
             <strong>{t("act.when")}</strong> {tx(card.when)}
           </div>
+
+          {seedNote ? (
+            <div className={`limit-now limit-${seedNote.tone}`}>
+              {seedNote.text}
+            </div>
+          ) : null}
+
           {main.length ? (
             <div className="form-grid">
               {card.name === "ChangeConfiguration" ? (
                 <ConfigChangeFields
                   form={form}
-                  setField={(k, v) => setForm((c) => ({ ...c, [k]: v }))}
+                  setField={setField}
                   chargerConfig={chargerConfig}
                 />
               ) : (
@@ -197,7 +340,7 @@ function CommandCard({ card, charger, chargerConfig, open, onToggle }) {
                     key={f.key}
                     field={f}
                     value={form[f.key]}
-                    set={(v) => setForm((c) => ({ ...c, [f.key]: v }))}
+                    set={(v) => setField(f.key, v)}
                   />
                 ))
               )}
@@ -214,7 +357,7 @@ function CommandCard({ card, charger, chargerConfig, open, onToggle }) {
                     key={f.key}
                     field={f}
                     value={form[f.key]}
-                    set={(v) => setForm((c) => ({ ...c, [f.key]: v }))}
+                    set={(v) => setField(f.key, v)}
                   />
                 ))}
               </div>
@@ -282,6 +425,140 @@ function CommandCard({ card, charger, chargerConfig, open, onToggle }) {
   );
 }
 
+function RawCommandSection({ charger, live }) {
+  const { t } = useI18n();
+  const [method, setMethod] = useState("");
+  const [payload, setPayload] = useState("{}");
+  const [busy, setBusy] = useState(false);
+  const [out, setOut] = useState(null);
+
+  async function send(e) {
+    e.preventDefault();
+    if (!method) return;
+
+    let parsed;
+    try {
+      parsed = JSON.parse(payload);
+    } catch {
+      setOut({
+        note: { tone: "bad", text: t("act.badJson") },
+        result: null,
+        summary: null,
+      });
+      return;
+    }
+
+    setBusy(true);
+    setOut(null);
+    const started = Date.now();
+
+    try {
+      const res = await adminApi.rawCommand(charger.id, method, parsed);
+      const ms = Date.now() - started;
+
+      if (res.ok) {
+        const ex = explainResult(res);
+        setOut({
+          note: { tone: ex.tone, text: t(ex.textKey), code: ex.code, ms },
+          result: { ...res, ms },
+          summary: summarizeByMethod(method, res, t),
+        });
+        if (MUTATING_METHODS.has(method)) {
+          invalidateChargerLive(charger.id);
+          live?.reload?.();
+        }
+      } else {
+        const code = res.error?.code || null;
+        setOut({
+          note: {
+            tone: "bad",
+            text: t("res.callError"),
+            code: code ? `CALLERROR_${code}` : "CALLERROR_GenericError",
+            ms,
+          },
+          result: { ...res, ms },
+          summary: null,
+        });
+      }
+    } catch (err) {
+      setOut({
+        note: {
+          tone: "bad",
+          text: errorText(err, t),
+          code: errorCatalogCode(err),
+          ms: Date.now() - started,
+        },
+        result: null,
+        summary: null,
+      });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form className="cmd-card-body" onSubmit={send} noValidate>
+      <div className="form-grid">
+        <label className="field">
+          <span>{t("act.method")}</span>
+          <input
+            value={method}
+            onChange={(e) => setMethod(e.target.value)}
+            placeholder="Reset, TriggerMessage, GetCompositeSchedule…"
+            dir="ltr"
+            autoComplete="off"
+          />
+        </label>
+        <label className="field field-wide">
+          <span>{t("act.payload")}</span>
+          <textarea
+            rows={5}
+            value={payload}
+            onChange={(e) => setPayload(e.target.value)}
+            placeholder='{"type": "Soft"}'
+            className="mono-input"
+            dir="ltr"
+            spellCheck={false}
+          />
+        </label>
+      </div>
+      <div className="cmd-foot">
+        <button
+          type="submit"
+          className="button button-danger"
+          disabled={!charger?.online || !method || busy}
+        >
+          <Send size={15} />
+          {busy ? t("act.sending") : t("raw.send")}
+        </button>
+        {!charger?.online ? (
+          <span className="muted">{t("act.offlineNote")}</span>
+        ) : null}
+      </div>
+
+      {out ? (
+        <div className="cmd-result">
+          <ResultNote note={out.note} ctx={{ chargerId: charger?.id }} />
+          {out.summary ? (
+            <div className="note note-ok">{out.summary}</div>
+          ) : null}
+          {out.result ? (
+            <TechDetails>
+              <div className="muted">
+                {t("res.time", { t: `${out.result.ms} ms` })}
+              </div>
+              <h5>{out.result.ok ? t("tech.response") : t("tech.error")}</h5>
+              <pre className="log-payload">
+                {pretty(out.result.ok ? out.result.response : out.result.error)}
+              </pre>
+            </TechDetails>
+          ) : null}
+        </div>
+      ) : null}
+    </form>
+  );
+}
+
 export default function ActionsPage() {
   const { t, tx } = useI18n();
   const { chargers } = useOverview();
@@ -290,30 +567,8 @@ export default function ActionsPage() {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(null);
 
-  const [chargerConfig, setChargerConfig] = useState({});
-
-  const [rawMethod, setRawMethod] = useState("");
-  const [rawPayload, setRawPayload] = useState("{}");
-
   const charger = chargers.find((c) => c.id === chargerId);
-
-  useEffect(() => {
-    if (chargerId && charger?.online) {
-      adminApi
-        .chargerConfig(chargerId)
-        .then((data) => {
-          const configMap = {};
-          data.configurationKey.forEach((k) => {
-            configMap[k.key] = k.value;
-          });
-          setChargerConfig(configMap);
-        })
-        .catch((e) => {
-          console.warn("Could not fetch config for placeholders", e);
-          setChargerConfig({});
-        });
-    }
-  }, [chargerId, charger?.online]);
+  const live = useChargerLive(chargerId, { online: charger?.online });
 
   const shown = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -326,23 +581,6 @@ export default function ActionsPage() {
             .includes(needle)),
     );
   }, [goal, q, tx]);
-
-  async function sendRawCommand() {
-    if (!chargerId) return alert("Select a charger first.");
-    if (
-      !window.confirm(
-        "Are you absolutely sure you want to send this raw command? It bypasses all safety checks.",
-      )
-    )
-      return;
-    try {
-      const payload = JSON.parse(rawPayload);
-      const res = await adminApi.rawCommand(chargerId, rawMethod, payload);
-      alert(`Response:\n${JSON.stringify(res, null, 2)}`);
-    } catch (e) {
-      alert(`Error: ${e.message}`);
-    }
-  }
 
   return (
     <>
@@ -383,50 +621,13 @@ export default function ActionsPage() {
           className="cmd-card risk-dangerous"
           style={{ marginBottom: "24px" }}
         >
-          <div className="cmd-card-head">
+          <div className="cmd-card-head" style={{ cursor: "default" }}>
             <div>
-              <strong>⚠️ Send Raw OCPP Command</strong>
-              <span>
-                Send any JSON payload directly to the charger. Extremely
-                dangerous.
-              </span>
+              <strong>⚠️ {t("raw.title")}</strong>
+              <span>{t("raw.body")}</span>
             </div>
           </div>
-          <div className="cmd-card-body">
-            <div className="form-grid">
-              <label className="field">
-                <span>OCPP Method</span>
-                <input
-                  value={rawMethod}
-                  onChange={(e) => setRawMethod(e.target.value)}
-                  placeholder="e.g. Reset, TriggerMessage, SetChargingProfile"
-                />
-              </label>
-              <label className="field field-wide">
-                <span>JSON Payload</span>
-                <textarea
-                  rows={4}
-                  value={rawPayload}
-                  onChange={(e) => setRawPayload(e.target.value)}
-                  placeholder='{"type": "Soft"}'
-                  className="mono-input"
-                  dir="ltr"
-                />
-              </label>
-            </div>
-            <div className="cmd-foot">
-              <button
-                className="button button-danger"
-                onClick={sendRawCommand}
-                disabled={!charger?.online || !rawMethod}
-              >
-                Send Raw Command
-              </button>
-              {!charger?.online ? (
-                <span className="muted">Charger is offline</span>
-              ) : null}
-            </div>
-          </div>
+          <RawCommandSection charger={charger} live={live} />
         </section>
       ) : null}
 
@@ -436,9 +637,9 @@ export default function ActionsPage() {
             key={`${c.name}-${chargerId}`}
             card={c}
             charger={charger}
-            chargerConfig={chargerConfig}
             open={open === c.name}
             onToggle={() => setOpen(open === c.name ? null : c.name)}
+            live={live}
           />
         ))}
       </div>

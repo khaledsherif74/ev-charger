@@ -154,6 +154,8 @@ export const adminApi = {
     request(`/api/admin/chargers/${cid(chargerId)}/config`, {
       timeoutMs: 90000,
     }),
+  chargerLive: (chargerId) =>
+    request(`/api/admin/chargers/${cid(chargerId)}/live`, { timeoutMs: 90000 }),
   rawCommand: (chargerId, method, payload) =>
     request(`/api/admin/chargers/${cid(chargerId)}/raw-command`, {
       method: "POST",
