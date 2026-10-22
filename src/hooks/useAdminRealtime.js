@@ -16,9 +16,7 @@ export default function useAdminRealtime() {
   useEffect(() => {
     if (!authenticated) return undefined;
 
-    const backendUrl =
-      import.meta.env.VITE_BACKEND_URL || "https://ev-charger.runasp.net";
-    const socket = io(backendUrl, {
+    const socket = io({
       withCredentials: true,
       transports: ["polling"],
     });

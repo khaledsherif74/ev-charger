@@ -40,8 +40,6 @@ function friendly(path, status, code, fallback) {
   return fallback;
 }
 
-const API_BASE = import.meta.env.VITE_BACKEND_URL || "";
-
 export async function request(path, options = {}) {
   const { method = "GET", body, signal, timeoutMs } = options;
   const controller = timeoutMs ? new AbortController() : null;
@@ -50,7 +48,7 @@ export async function request(path, options = {}) {
     : null;
   let response;
   try {
-    response = await fetch(`${API_BASE}${path}`, {
+    response = await fetch(path, {
       method,
       credentials: "include",
       signal: controller ? controller.signal : signal,
