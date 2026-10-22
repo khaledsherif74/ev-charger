@@ -6,7 +6,13 @@ import useOverview from "../hooks/useOverview";
 import { useI18n } from "../i18n";
 import { entryFor, hasEntry } from "../utils/errorCatalog";
 import { durationText } from "../utils/time";
-import { formatDate, formatDay, formatKwh, formatMoneyPiastres, sessionTone } from "../utils/format";
+import {
+  formatDate,
+  formatDay,
+  formatKwh,
+  formatMoneyPiastres,
+  sessionTone,
+} from "../utils/format";
 import PageHeader from "../components/common/PageHeader";
 import SectionCard from "../components/common/SectionCard";
 import Badge from "../components/common/Badge";
@@ -15,15 +21,25 @@ import ErrorState from "../components/common/ErrorState";
 import Spinner from "../components/common/Spinner";
 import TechDetails from "../components/common/TechDetails";
 import SettleDialog from "../components/common/SettleDialog";
+import SessionControlModal from "../components/common/SessionControlModal";
+import StartSessionModal from "../components/common/StartSessionModal";
+import { Play } from "lucide-react";
 import { HelpLink } from "../components/common/HelpPanel";
 import { fetchAlerts } from "../features/alerts/alertsSlice";
 import { useDispatch } from "react-redux";
 
 const GROUPS = ["all", "active", "done", "failed", "review"];
-const STATE_HELP = { TIMEOUT: "SESSION_TIMEOUT", FAILED: "SESSION_FAILED", OFFLINE_CHARGING: "SESSION_OFFLINE_CHARGING", UNRESOLVED: "SESSION_UNRESOLVED" };
+const STATE_HELP = {
+  TIMEOUT: "SESSION_TIMEOUT",
+  FAILED: "SESSION_FAILED",
+  OFFLINE_CHARGING: "SESSION_OFFLINE_CHARGING",
+  UNRESOLVED: "SESSION_UNRESOLVED",
+};
 
-const startOfDay = (d) => (d ? new Date(`${d}T00:00:00`).toISOString() : undefined);
-const endOfDay = (d) => (d ? new Date(`${d}T23:59:59.999`).toISOString() : undefined);
+const startOfDay = (d) =>
+  d ? new Date(`${d}T00:00:00`).toISOString() : undefined;
+const endOfDay = (d) =>
+  d ? new Date(`${d}T23:59:59.999`).toISOString() : undefined;
 
 export default function SessionsPage() {
   const { t, lang } = useI18n();
@@ -33,16 +49,24 @@ export default function SessionsPage() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [settle, setSettle] = useState(null);
+  const [controlSession, setControlSession] = useState(null);
+  const [startModal, setStartModal] = useState(false);
 
   const list = usePaged(
     async (before) => {
-      const r = await adminApi.sessions({ group: group === "all" ? undefined : group, from: startOfDay(from), to: endOfDay(to), before: before || undefined });
+      const r = await adminApi.sessions({
+        group: group === "all" ? undefined : group,
+        from: startOfDay(from),
+        to: endOfDay(to),
+        before: before || undefined,
+      });
       return { items: r.sessions, nextBefore: r.nextBefore };
     },
     [group, from, to],
   );
 
-  const reasonLabel = (reason) => (reason ? entryFor(`STOP_${reason}`, lang).title : "—");
+  const reasonLabel = (reason) =>
+    reason ? entryFor(`STOP_${reason}`, lang).title : "—";
 
   return (
     <>
@@ -50,10 +74,25 @@ export default function SessionsPage() {
         title={t("ses.title")}
         description={t("ses.sub")}
         actions={
-          <button type="button" className="button button-secondary" onClick={list.reload} disabled={list.loading}>
-            <RefreshCw size={15} />
-            {t("common.refresh")}
-          </button>
+          <div style={{ display: "flex", gap: "8px" }}>
+            <button
+              type="button"
+              className="button button-primary"
+              onClick={() => setStartModal(true)}
+            >
+              <Play size={15} />
+              Force Start Session
+            </button>
+            <button
+              type="button"
+              className="button button-secondary"
+              onClick={list.reload}
+              disabled={list.loading}
+            >
+              <RefreshCw size={15} />
+              {t("common.refresh")}
+            </button>
+          </div>
         }
       />
       <SectionCard
@@ -62,29 +101,53 @@ export default function SessionsPage() {
           <div className="filter-group">
             <label className="filter-select">
               <span>{t("common.from")}</span>
-              <input type="date" value={from} max={to || undefined} onChange={(e) => setFrom(e.target.value)} />
+              <input
+                type="date"
+                value={from}
+                max={to || undefined}
+                onChange={(e) => setFrom(e.target.value)}
+              />
             </label>
             <label className="filter-select">
               <span>{t("common.to")}</span>
-              <input type="date" value={to} min={from || undefined} onChange={(e) => setTo(e.target.value)} />
+              <input
+                type="date"
+                value={to}
+                min={from || undefined}
+                onChange={(e) => setTo(e.target.value)}
+              />
             </label>
           </div>
         }
       >
         <div className="chips pad">
           {GROUPS.map((g) => (
-            <button key={g} type="button" className={`chip ${group === g ? "active" : ""}`} onClick={() => setGroup(g)}>
+            <button
+              key={g}
+              type="button"
+              className={`chip ${group === g ? "active" : ""}`}
+              onClick={() => setGroup(g)}
+            >
               {t(`ses.group.${g}`)}
             </button>
           ))}
         </div>
-        {from || to ? <div className="hint pad">{t("ses.range", { from: from ? formatDay(from) : "…", to: to ? formatDay(to) : "…" })}</div> : null}
+        {from || to ? (
+          <div className="hint pad">
+            {t("ses.range", {
+              from: from ? formatDay(from) : "…",
+              to: to ? formatDay(to) : "…",
+            })}
+          </div>
+        ) : null}
         {list.loading && !list.items.length ? (
           <div className="loading-block">
             <Spinner />
           </div>
         ) : null}
-        {list.error && !list.items.length ? <ErrorState message={list.error.message} onRetry={list.reload} /> : null}
+        {list.error && !list.items.length ? (
+          <ErrorState message={list.error.message} onRetry={list.reload} />
+        ) : null}
         {list.items.length ? (
           <>
             <div className="table-shell table-scroll">
@@ -105,13 +168,23 @@ export default function SessionsPage() {
                 </thead>
                 <tbody>
                   {list.items.map((s) => (
-                    <tr key={s.id} className={s.state === "UNRESOLVED" ? "row-review" : ""}>
+                    <tr
+                      key={s.id}
+                      className={s.state === "UNRESOLVED" ? "row-review" : ""}
+                    >
                       <td dir="ltr">#{s.id}</td>
                       <td dir="ltr">{s.userEmail}</td>
                       <td dir="ltr">{s.chargerId}</td>
                       <td>
-                        <Badge tone={sessionTone(s.state)}>{s.state === "UNRESOLVED" ? t("ses.review") : t(`ss.${s.state}`)}</Badge>
-                        <HelpLink code={STATE_HELP[s.state]} ctx={{ chargerId: s.chargerId, sessionId: s.id }} />
+                        <Badge tone={sessionTone(s.state)}>
+                          {s.state === "UNRESOLVED"
+                            ? t("ses.review")
+                            : t(`ss.${s.state}`)}
+                        </Badge>
+                        <HelpLink
+                          code={STATE_HELP[s.state]}
+                          ctx={{ chargerId: s.chargerId, sessionId: s.id }}
+                        />
                       </td>
                       <td>{formatKwh(s.energyWh)}</td>
                       <td>{formatMoneyPiastres(s.costPiastres)}</td>
@@ -119,11 +192,31 @@ export default function SessionsPage() {
                       <td>{durationText(s.startedAt, s.endedAt, t)}</td>
                       <td>
                         {reasonLabel(s.stopReason)}
-                        {s.stopReason && hasEntry(`STOP_${s.stopReason}`) ? <HelpLink code={`STOP_${s.stopReason}`} ctx={{ chargerId: s.chargerId, sessionId: s.id }} /> : null}
+                        {s.stopReason && hasEntry(`STOP_${s.stopReason}`) ? (
+                          <HelpLink
+                            code={`STOP_${s.stopReason}`}
+                            ctx={{ chargerId: s.chargerId, sessionId: s.id }}
+                          />
+                        ) : null}
                       </td>
                       <td>
+                        {s.state === "STARTED" ? (
+                          <button
+                            type="button"
+                            className="button button-secondary"
+                            style={{ marginRight: "8px" }}
+                            onClick={() => setControlSession(s)}
+                          >
+                            Live Control
+                          </button>
+                        ) : null}
+
                         {s.state === "UNRESOLVED" ? (
-                          <button type="button" className="button button-primary" onClick={() => setSettle(s)}>
+                          <button
+                            type="button"
+                            className="button button-primary"
+                            onClick={() => setSettle(s)}
+                          >
                             {t("ses.settle")}
                           </button>
                         ) : null}
@@ -143,7 +236,12 @@ export default function SessionsPage() {
               </table>
             </div>
             {list.next ? (
-              <button type="button" className="button button-secondary load-more" onClick={list.loadMore} disabled={list.loadingMore}>
+              <button
+                type="button"
+                className="button button-secondary load-more"
+                onClick={list.loadMore}
+                disabled={list.loadingMore}
+              >
                 {list.loadingMore ? <Spinner /> : t("common.loadMore")}
               </button>
             ) : null}
@@ -162,6 +260,18 @@ export default function SessionsPage() {
             list.reload();
             dispatch(fetchAlerts());
           }}
+        />
+      ) : null}
+      {controlSession ? (
+        <SessionControlModal
+          session={controlSession}
+          onClose={() => setControlSession(null)}
+        />
+      ) : null}
+      {startModal ? (
+        <StartSessionModal
+          chargers={useOverview().chargers}
+          onClose={() => setStartModal(false)}
         />
       ) : null}
     </>

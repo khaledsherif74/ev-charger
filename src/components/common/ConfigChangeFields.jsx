@@ -8,7 +8,11 @@ import {
 
 const OTHER = "__other__";
 
-export default function ConfigChangeFields({ form, setField }) {
+export default function ConfigChangeFields({
+  form,
+  setField,
+  chargerConfig = {},
+}) {
   const { t, tx } = useI18n();
   const groups = useMemo(() => writableGroups(), []);
   const all = useMemo(() => groups.flatMap((g) => g.keys), [groups]);
@@ -27,7 +31,14 @@ export default function ConfigChangeFields({ form, setField }) {
     }
     const k = all.find((x) => x.key === value);
     setField("key", value);
-    setField("value", k?.recommended ?? (BOOL_KEYS.has(value) ? "true" : ""));
+
+    const currentVal = chargerConfig[value];
+    setField(
+      "value",
+      currentVal !== undefined
+        ? currentVal
+        : (k?.recommended ?? (BOOL_KEYS.has(value) ? "true" : "")),
+    );
   }
 
   return (
@@ -75,6 +86,11 @@ export default function ConfigChangeFields({ form, setField }) {
             <input
               dir="ltr"
               value={form.value || ""}
+              placeholder={
+                chargerConfig[form.key] !== undefined
+                  ? chargerConfig[form.key]
+                  : "Enter value"
+              }
               onChange={(e) => setField("value", e.target.value)}
             />
           )}

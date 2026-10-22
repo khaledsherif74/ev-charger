@@ -154,6 +154,16 @@ export const adminApi = {
     request(`/api/admin/chargers/${cid(chargerId)}/config`, {
       timeoutMs: 90000,
     }),
+  rawCommand: (chargerId, method, payload) =>
+    request(`/api/admin/chargers/${cid(chargerId)}/raw-command`, {
+      method: "POST",
+      body: { method, payload },
+    }),
+  startSession: (userId, chargerId) =>
+    request("/api/admin/sessions/start", {
+      method: "POST",
+      body: { userId, chargerId },
+    }),
   chargerEvents: (chargerId, { before, limit = 50, signal } = {}) =>
     request(
       `/api/admin/chargers/${cid(chargerId)}/events${qs({ before, limit })}`,

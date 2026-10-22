@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { ChevronDown, Search, Send, ShieldAlert } from "lucide-react";
 import { adminApi } from "../api/http";
 import useOverview from "../hooks/useOverview";
@@ -87,7 +87,7 @@ function Field({ field, value, set }) {
   );
 }
 
-function CommandCard({ card, charger, open, onToggle }) {
+function CommandCard({ card, charger, chargerConfig, open, onToggle }) {
   const { t, tx, lang } = useI18n();
   const { confirm, dialog } = useConfirm();
   const [form, setForm] = useState(() => initialForm(card));
@@ -189,6 +189,7 @@ function CommandCard({ card, charger, open, onToggle }) {
                 <ConfigChangeFields
                   form={form}
                   setField={(k, v) => setForm((c) => ({ ...c, [k]: v }))}
+                  chargerConfig={chargerConfig}
                 />
               ) : (
                 main.map((f) => (
@@ -288,7 +289,31 @@ export default function ActionsPage() {
   const [goal, setGoal] = useState("all");
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(null);
+
+  const [chargerConfig, setChargerConfig] = useState({});
+
+  const [rawMethod, setRawMethod] = useState("");
+  const [rawPayload, setRawPayload] = useState("{}");
+
   const charger = chargers.find((c) => c.id === chargerId);
+
+  useEffect(() => {
+    if (chargerId && charger?.online) {
+      adminApi
+        .chargerConfig(chargerId)
+        .then((data) => {
+          const configMap = {};
+          data.configurationKey.forEach((k) => {
+            configMap[k.key] = k.value;
+          });
+          setChargerConfig(configMap);
+        })
+        .catch((e) => {
+          console.warn("Could not fetch config for placeholders", e);
+          setChargerConfig({});
+        });
+    }
+  }, [chargerId, charger?.online]);
 
   const shown = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -301,6 +326,23 @@ export default function ActionsPage() {
             .includes(needle)),
     );
   }, [goal, q, tx]);
+
+  async function sendRawCommand() {
+    if (!chargerId) return alert("Select a charger first.");
+    if (
+      !window.confirm(
+        "Are you absolutely sure you want to send this raw command? It bypasses all safety checks.",
+      )
+    )
+      return;
+    try {
+      const payload = JSON.parse(rawPayload);
+      const res = await adminApi.rawCommand(chargerId, rawMethod, payload);
+      alert(`Response:\n${JSON.stringify(res, null, 2)}`);
+    } catch (e) {
+      alert(`Error: ${e.message}`);
+    }
+  }
 
   return (
     <>
@@ -333,13 +375,68 @@ export default function ActionsPage() {
           </button>
         ))}
       </div>
+
       {!chargers.length ? <EmptyState title={t("ch.none")} /> : null}
+
+      {chargerId ? (
+        <section
+          className="cmd-card risk-dangerous"
+          style={{ marginBottom: "24px" }}
+        >
+          <div className="cmd-card-head">
+            <div>
+              <strong>⚠️ Send Raw OCPP Command</strong>
+              <span>
+                Send any JSON payload directly to the charger. Extremely
+                dangerous.
+              </span>
+            </div>
+          </div>
+          <div className="cmd-card-body">
+            <div className="form-grid">
+              <label className="field">
+                <span>OCPP Method</span>
+                <input
+                  value={rawMethod}
+                  onChange={(e) => setRawMethod(e.target.value)}
+                  placeholder="e.g. Reset, TriggerMessage, SetChargingProfile"
+                />
+              </label>
+              <label className="field field-wide">
+                <span>JSON Payload</span>
+                <textarea
+                  rows={4}
+                  value={rawPayload}
+                  onChange={(e) => setRawPayload(e.target.value)}
+                  placeholder='{"type": "Soft"}'
+                  className="mono-input"
+                  dir="ltr"
+                />
+              </label>
+            </div>
+            <div className="cmd-foot">
+              <button
+                className="button button-danger"
+                onClick={sendRawCommand}
+                disabled={!charger?.online || !rawMethod}
+              >
+                Send Raw Command
+              </button>
+              {!charger?.online ? (
+                <span className="muted">Charger is offline</span>
+              ) : null}
+            </div>
+          </div>
+        </section>
+      ) : null}
+
       <div className="cmd-list">
         {shown.map((c) => (
           <CommandCard
             key={`${c.name}-${chargerId}`}
             card={c}
             charger={charger}
+            chargerConfig={chargerConfig}
             open={open === c.name}
             onToggle={() => setOpen(open === c.name ? null : c.name)}
           />
