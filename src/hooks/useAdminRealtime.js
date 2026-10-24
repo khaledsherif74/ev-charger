@@ -16,11 +16,11 @@ export default function useAdminRealtime() {
   useEffect(() => {
     if (!authenticated) return undefined;
 
-    // Keep this same-origin: Vercel proxies /socket.io to the backend and the
-    // browser's admin cookie remains available to the Socket.IO handshake.
+    // Keep this same-origin so the admin's HttpOnly cookie is sent through the
+    // Vercel rewrite. The backend uses Socket.IO's default /socket.io/ path.
+    // Do not set addTrailingSlash:false: that would request /socket.io instead.
     const socket = io(window.location.origin, {
-      path: "/socket.io",
-      addTrailingSlash: false,
+      path: "/socket.io/",
       withCredentials: true,
       transports: ["polling"],
       reconnection: true,
@@ -37,7 +37,6 @@ export default function useAdminRealtime() {
     socket.on("disconnect", () => dispatch(socketDisconnected()));
     socket.on("connect_error", (error) => {
       dispatch(socketDisconnected());
-      // Useful in the browser console without exposing credentials or cookies.
       console.warn("Admin realtime connection failed:", error?.message || error);
     });
     socket.on("charger:status", (payload) => {

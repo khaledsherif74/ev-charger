@@ -6,12 +6,19 @@
     },
     {
       "source": "/socket.io",
-      "destination": "https://ev-charger.runasp.net/socket.io"
+      "destination": "https://ev-charger.runasp.net/socket.io/"
+    },
+    {
+      "source": "/socket.io/",
+      "destination": "https://ev-charger.runasp.net/socket.io/"
     },
     {
       "source": "/socket.io/:path*",
       "destination": "https://ev-charger.runasp.net/socket.io/:path*"
     },
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }
