@@ -22,8 +22,6 @@ import Spinner from "../components/common/Spinner";
 import TechDetails from "../components/common/TechDetails";
 import SettleDialog from "../components/common/SettleDialog";
 import SessionControlModal from "../components/common/SessionControlModal";
-import StartSessionModal from "../components/common/StartSessionModal";
-import { Play } from "lucide-react";
 import { HelpLink } from "../components/common/HelpPanel";
 import { fetchAlerts } from "../features/alerts/alertsSlice";
 import { useDispatch } from "react-redux";
@@ -50,7 +48,6 @@ export default function SessionsPage() {
   const [to, setTo] = useState("");
   const [settle, setSettle] = useState(null);
   const [controlSession, setControlSession] = useState(null);
-  const [startModal, setStartModal] = useState(false);
 
   const list = usePaged(
     async (before) => {
@@ -74,25 +71,15 @@ export default function SessionsPage() {
         title={t("ses.title")}
         description={t("ses.sub")}
         actions={
-          <div style={{ display: "flex", gap: "8px" }}>
-            <button
-              type="button"
-              className="button button-primary"
-              onClick={() => setStartModal(true)}
-            >
-              <Play size={15} />
-              Force Start Session
-            </button>
-            <button
-              type="button"
-              className="button button-secondary"
-              onClick={list.reload}
-              disabled={list.loading}
-            >
-              <RefreshCw size={15} />
-              {t("common.refresh")}
-            </button>
-          </div>
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={list.reload}
+            disabled={list.loading}
+          >
+            <RefreshCw size={15} />
+            {t("common.refresh")}
+          </button>
         }
       />
       <SectionCard
@@ -268,12 +255,7 @@ export default function SessionsPage() {
           onClose={() => setControlSession(null)}
         />
       ) : null}
-      {startModal ? (
-        <StartSessionModal
-          chargers={useOverview().chargers}
-          onClose={() => setStartModal(false)}
-        />
-      ) : null}
     </>
   );
 }
+

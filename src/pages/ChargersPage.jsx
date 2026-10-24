@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Cable } from "lucide-react";
+import { Cable, Play } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { adminApi } from "../api/http";
 import { fetchOverview } from "../features/admin/adminSlice";
@@ -25,8 +25,9 @@ import { HelpLink } from "../components/common/HelpPanel";
 import ReportButton from "../components/common/ReportButton";
 import ResultNote from "../components/common/ResultNote";
 import MainConfigCard from "../components/common/MainConfigCard";
+import StartSessionModal from "../components/common/StartSessionModal";
 
-function ChargerCard({ charger }) {
+function ChargerCard({ charger, onStart }) {
   const { t } = useI18n();
   const dispatch = useDispatch();
   const { confirm, dialog } = useConfirm();
@@ -38,6 +39,7 @@ function ChargerCard({ charger }) {
   const st = plainStatus(charger, t);
   const session = charger.activeSession;
   const disabled = charger.status === "Unavailable";
+  const canStart = charger.online && charger.status === "Preparing" && !session;
   const ctx = { chargerId: charger.id, sessionId: session?.id };
   const hasError = charger.errorCode && charger.errorCode !== "NoError";
   const locked = !charger.online || busy;
@@ -139,13 +141,24 @@ function ChargerCard({ charger }) {
       </div>
 
       <div className="charger-actions">
-        {session ? (
+        {!session ? (
+          <button
+            type="button"
+            className="button button-primary"
+            onClick={() => onStart(charger)}
+            disabled={!canStart || busy}
+            title={!charger.online ? t("status.offline") : charger.status !== "Preparing" ? "Plug in a vehicle to start charging." : undefined}
+          >
+            <Play size={15} />
+            {t("u.start")}
+          </button>
+        ) : (
           <ActionButton
             id="stopSession"
             ctx={ctx}
             className="button button-danger"
           />
-        ) : null}
+        )}
         <ActionButton id="restart" ctx={ctx} />
         <ActionButton id={disabled ? "enable" : "disable"} ctx={ctx} />
         <ReportButton chargerId={charger.id} />
@@ -205,6 +218,7 @@ function ChargerCard({ charger }) {
 export default function ChargersPage() {
   const { t } = useI18n();
   const { overview, chargers, status, error, reload } = useOverview();
+  const [startCharger, setStartCharger] = useState(null);
 
   if (!overview && status === "loading")
     return (
@@ -222,7 +236,7 @@ export default function ChargersPage() {
         <div className="charger-cards">
           {chargers.map((c) => (
             <div key={c.id} className="charger-pair">
-              <ChargerCard charger={c} />
+              <ChargerCard charger={c} onStart={setStartCharger} />
               <MainConfigCard charger={c} />
             </div>
           ))}
@@ -230,6 +244,13 @@ export default function ChargersPage() {
       ) : (
         <EmptyState title={t("ch.none")} />
       )}
+      {startCharger ? (
+        <StartSessionModal
+          charger={chargers.find((c) => c.id === startCharger.id) || startCharger}
+          onClose={() => setStartCharger(null)}
+        />
+      ) : null}
     </>
   );
 }
+

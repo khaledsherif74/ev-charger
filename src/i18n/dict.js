@@ -351,6 +351,8 @@ export const DICT = {
   "tl.range.24h": ["Last 24 hours", "آخر 24 ساعة"],
   "tl.range.7d": ["Last 7 days", "آخر 7 أيام"],
   "tl.range.30d": ["Last 30 days", "آخر 30 يومًا"],
+  "tl.day": ["Choose day", "اختر اليوم"],
+  "tl.day.clear": ["Clear day", "مسح اليوم"],
   "tl.routine": ["Show routine messages", "إظهار الرسائل الروتينية"],
   "tl.none": ["Nothing happened in this time", "لم يحدث شيء في هذه الفترة"],
   "tl.noneHelp": ["Try a longer time range or choose Everything.", "جرّب فترة أطول أو اختر «كل شيء»."],
